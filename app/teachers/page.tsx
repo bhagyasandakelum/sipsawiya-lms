@@ -1,16 +1,40 @@
 import Link from 'next/link'
 import { GraduationCap, BookOpen, MapPin, Star, Search } from 'lucide-react'
-import prisma from '@/lib/prisma'
+
+// Mock data to test if the UI works without DB
+const mockTeachers = [
+    {
+        id: '1',
+        name: 'Dr. Sarah Connor',
+        degree: 'Ph.D. in Physics',
+        subjects: 'Physics, Mathematics',
+        image: null,
+        taughtClasses: [{ id: 'c1' }, { id: 'c2' }]
+    },
+    {
+        id: '2',
+        name: 'Prof. John Smith',
+        degree: 'M.Sc. in Biology',
+        subjects: 'Biology, Chemistry',
+        image: null,
+        taughtClasses: [{ id: 'c3' }]
+    }
+]
 
 export default async function TeachersPage() {
-    const teachers = await prisma.user.findMany({
-        where: {
-            role: 'TEACHER',
-        },
-        include: {
-            taughtClasses: true,
-        },
-    })
+    // We'll try to fetch but fallback to mock for now
+    let teachers = []
+    try {
+        // Dynamically import prisma to avoid top-level crash if client is missing
+        const { default: prisma } = await import('@/lib/prisma')
+        teachers = await prisma.user.findMany({
+            where: { role: 'TEACHER' as any },
+            include: { taughtClasses: true }
+        })
+    } catch (error) {
+        console.error('DB Fetch failed, showing mock data:', (error as Error).message)
+        teachers = mockTeachers
+    }
 
     return (
         <div className="min-h-screen relative overflow-hidden bg-[#0a0a0a] text-white">
@@ -46,6 +70,7 @@ export default async function TeachersPage() {
                         </h1>
                         <p className="text-muted-foreground max-w-xl text-lg">
                             Learn from the best minds in the industry. Our teachers are dedicated to your success and academic excellence.
+                            {teachers === mockTeachers && " (Offline Mode - Showing Mock Data)"}
                         </p>
                     </div>
 
@@ -77,14 +102,6 @@ export default async function TeachersPage() {
                                 <div>
                                     <h3 className="text-xl font-bold group-hover:text-blue-400 transition-colors">{teacher.name}</h3>
                                     <p className="text-blue-400 text-sm font-medium">{teacher.degree || 'Expert Educator'}</p>
-                                    <div className="flex items-center gap-1 mt-1 text-amber-400">
-                                        <Star className="w-3 h-3 fill-current" />
-                                        <Star className="w-3 h-3 fill-current" />
-                                        <Star className="w-3 h-3 fill-current" />
-                                        <Star className="w-3 h-3 fill-current" />
-                                        <Star className="w-3 h-3 fill-current" />
-                                        <span className="text-xs text-muted-foreground ml-1">(4.9)</span>
-                                    </div>
                                 </div>
                             </div>
 
@@ -100,7 +117,7 @@ export default async function TeachersPage() {
                                 <div className="pt-4 border-t border-white/5 flex items-center justify-between text-sm">
                                     <div className="flex items-center gap-2 text-muted-foreground">
                                         <BookOpen className="w-4 h-4" />
-                                        <span>{teacher.taughtClasses.length} Classes</span>
+                                        <span>{teacher.taughtClasses?.length || 0} Classes</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-muted-foreground">
                                         <MapPin className="w-4 h-4" />
@@ -110,15 +127,6 @@ export default async function TeachersPage() {
                             </div>
                         </Link>
                     ))}
-
-                    {teachers.length === 0 && (
-                        <div className="col-span-full py-20 text-center glass rounded-3xl border border-dashed border-white/10">
-                            <p className="text-muted-foreground text-lg">No teachers found. Start by joining as a teacher!</p>
-                            <Link href="/register?role=teacher" className="mt-4 inline-block text-blue-400 hover:underline">
-                                Register as a teacher
-                            </Link>
-                        </div>
-                    )}
                 </div>
             </main>
         </div>

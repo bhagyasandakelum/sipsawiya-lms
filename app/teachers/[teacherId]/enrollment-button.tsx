@@ -44,7 +44,7 @@ export default function EnrollmentButton({
                 const data = await res.json()
                 alert(data.error || "Failed to enroll")
             }
-        } catch (error) {
+        } catch (error: any) {
             alert("An error occurred during enrollment")
         } finally {
             setLoading(false)
