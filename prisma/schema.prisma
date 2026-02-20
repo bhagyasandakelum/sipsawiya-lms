@@ -28,11 +28,14 @@ model User {
   password      String
   role          Role      @default(STUDENT)
   image         String?
+  degree        String?   // For teachers
+  subjects      String?   // For teachers (comma separated or JSON)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   // Teacher relationships
   taughtClasses Class[]   @relation("TeacherClasses")
+  notices       Notice[]  @relation("TeacherNotices")
   
   // Student relationships
   enrollments   Enrollment[]
@@ -73,4 +76,13 @@ model Enrollment {
   createdAt DateTime @default(now())
 
   @@unique([studentId, classId])
+}
+
+model Notice {
+  id        String   @id @default(cuid())
+  content   String
+  teacherId String
+  teacher   User     @relation("TeacherNotices", fields: [teacherId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

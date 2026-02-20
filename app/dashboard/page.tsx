@@ -1,11 +1,12 @@
 "use client"
 
 import { useSession } from "next-auth/react"
-import { BookOpen, Users, Video, Clock, ArrowUpRight } from "lucide-react"
+import { BookOpen, Users, Video, Clock, ArrowUpRight, Bell } from "lucide-react"
+import Link from "next/link"
 
 export default function DashboardPage() {
     const { data: session } = useSession()
-    const isTeacher = session?.user?.role === "TEACHER"
+    const isTeacher = (session?.user as any)?.role === "TEACHER"
 
     const stats = isTeacher ? [
         { label: "Active Classes", value: "0", icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
@@ -54,33 +55,47 @@ export default function DashboardPage() {
                     <div className="grid grid-cols-2 gap-4">
                         {isTeacher ? (
                             <>
-                                <button className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-blue-500 transition-all text-left group">
+                                <Link href="/dashboard/classes" className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-blue-500 transition-all text-left group">
                                     <div className="p-2 w-fit bg-blue-500/10 rounded-lg mb-4 text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all">
                                         <PlusCircle size={20} />
                                     </div>
                                     <p className="font-bold text-sm">Create Class</p>
-                                </button>
-                                <button className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500 transition-all text-left group">
+                                </Link>
+                                <button
+                                    onClick={() => {
+                                        const content = prompt("Enter your notice content:")
+                                        if (content) {
+                                            fetch("/api/notices", {
+                                                method: "POST",
+                                                body: JSON.stringify({ content }),
+                                            }).then(res => {
+                                                if (res.ok) alert("Notice published!")
+                                                else alert("Failed to publish notice")
+                                            })
+                                        }
+                                    }}
+                                    className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500 transition-all text-left group"
+                                >
                                     <div className="p-2 w-fit bg-purple-500/10 rounded-lg mb-4 text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-all">
-                                        <Video size={20} />
+                                        <Bell size={20} />
                                     </div>
-                                    <p className="font-bold text-sm">Upload Material</p>
+                                    <p className="font-bold text-sm">Publish Notice</p>
                                 </button>
                             </>
                         ) : (
                             <>
-                                <button className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-blue-500 transition-all text-left group">
+                                <Link href="/teachers" className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-blue-500 transition-all text-left group">
                                     <div className="p-2 w-fit bg-blue-500/10 rounded-lg mb-4 text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all">
+                                        <Users size={20} />
+                                    </div>
+                                    <p className="font-bold text-sm">Find Teachers</p>
+                                </Link>
+                                <Link href="/dashboard/classes" className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500 transition-all text-left group">
+                                    <div className="p-2 w-fit bg-purple-500/10 rounded-lg mb-4 text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-all">
                                         <BookOpen size={20} />
                                     </div>
-                                    <p className="font-bold text-sm">Browse Courses</p>
-                                </button>
-                                <button className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500 transition-all text-left group">
-                                    <div className="p-2 w-fit bg-purple-500/10 rounded-lg mb-4 text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-all">
-                                        <Video size={20} />
-                                    </div>
-                                    <p className="font-bold text-sm">Watch Lessons</p>
-                                </button>
+                                    <p className="font-bold text-sm">My Classes</p>
+                                </Link>
                             </>
                         )}
                     </div>

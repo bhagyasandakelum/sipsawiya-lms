@@ -15,8 +15,8 @@ export default function Home() {
           <span className="text-2xl font-bold tracking-tight">Sipsawiya</span>
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-          <Link href="#" className="hover:text-white transition-colors">Courses</Link>
-          <Link href="#" className="hover:text-white transition-colors">Teachers</Link>
+          <Link href="/courses" className="hover:text-white transition-colors">Courses</Link>
+          <Link href="/teachers" className="hover:text-white transition-colors">Teachers</Link>
           <Link href="#" className="hover:text-white transition-colors">Pricing</Link>
           <Link href="#" className="hover:text-white transition-colors">About</Link>
         </div>

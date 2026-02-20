@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs"
 
 export async function POST(req: Request) {
     try {
-        const { name, email, password, role } = await req.json()
+        const { name, email, password, role, degree, subjects } = await req.json()
 
         if (!email || !password || !role) {
             return NextResponse.json({ error: "Missing fields" }, { status: 400 })
@@ -25,7 +25,9 @@ export async function POST(req: Request) {
                 name,
                 email,
                 password: hashedPassword,
-                role: role.toUpperCase() === "TEACHER" ? "TEACHER" : "STUDENT"
+                role: role.toUpperCase() === "TEACHER" ? "TEACHER" : "STUDENT",
+                degree: role.toUpperCase() === "TEACHER" ? degree : null,
+                subjects: role.toUpperCase() === "TEACHER" ? subjects : null,
             }
         })
 

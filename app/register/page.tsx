@@ -108,8 +108,8 @@ export default function RegisterPage() {
                                 type="button"
                                 onClick={() => setFormData({ ...formData, role: "STUDENT" })}
                                 className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.role === "STUDENT"
-                                        ? "bg-blue-600/20 border-blue-500 text-blue-400"
-                                        : "bg-white/5 border-white/10 hover:border-white/20"
+                                    ? "bg-blue-600/20 border-blue-500 text-blue-400"
+                                    : "bg-white/5 border-white/10 hover:border-white/20"
                                     }`}
                             >
                                 <User className="w-4 h-4" /> Student
@@ -118,14 +118,41 @@ export default function RegisterPage() {
                                 type="button"
                                 onClick={() => setFormData({ ...formData, role: "TEACHER" })}
                                 className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.role === "TEACHER"
-                                        ? "bg-purple-600/20 border-purple-500 text-purple-400"
-                                        : "bg-white/5 border-white/10 hover:border-white/20"
+                                    ? "bg-purple-600/20 border-purple-500 text-purple-400"
+                                    : "bg-white/5 border-white/10 hover:border-white/20"
                                     }`}
                             >
                                 <BookOpen className="w-4 h-4" /> Teacher
                             </button>
                         </div>
                     </div>
+
+                    {formData.role === "TEACHER" && (
+                        <>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium ml-1">Highest Degree</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 outline-none transition-all"
+                                    placeholder="e.g. B.Sc. in Physics"
+                                    value={(formData as any).degree || ""}
+                                    onChange={(e) => setFormData({ ...formData, ['degree' as any]: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium ml-1">Subjects (comma separated)</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 outline-none transition-all"
+                                    placeholder="e.g. Physics, Mathematics"
+                                    value={(formData as any).subjects || ""}
+                                    onChange={(e) => setFormData({ ...formData, ['subjects' as any]: e.target.value })}
+                                />
+                            </div>
+                        </>
+                    )}
 
                     <button
                         type="submit"
