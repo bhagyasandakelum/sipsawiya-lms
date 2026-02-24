@@ -22,8 +22,8 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-4">
           <Link href="/login" className="px-4 py-2 text-sm font-medium hover:text-white transition-colors">Login</Link>
-          <Link href="/register" className="px-5 py-2.5 bg-white text-black rounded-full text-sm font-bold hover:bg-gray-200 transition-all">
-            Get Started
+          <Link href="/dashboard" className="px-5 py-2.5 bg-white text-black rounded-full text-sm font-bold hover:bg-gray-200 transition-all">
+            Open Dashboard
           </Link>
         </div>
       </nav>
@@ -45,11 +45,11 @@ export default function Home() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4">
-          <Link href="/register" className="group px-8 py-4 premium-gradient rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)]">
-            Enroll as a Student <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+          <Link href="/dashboard" className="group px-8 py-4 premium-gradient rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+            Explore Dashboard <ArrowRight className="group-hover:translate-x-1 transition-transform" />
           </Link>
-          <Link href="/register?role=teacher" className="px-8 py-4 glass rounded-xl font-bold hover:bg-white/10 transition-all">
-            Join as a Teacher
+          <Link href="/dashboard/profile" className="px-8 py-4 glass rounded-xl font-bold hover:bg-white/10 transition-all">
+            Teacher Settings
           </Link>
         </div>
 

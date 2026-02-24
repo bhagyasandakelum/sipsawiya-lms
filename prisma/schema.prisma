@@ -3,19 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
-}
-
-enum Role {
-  STUDENT
-  TEACHER
-}
-
-enum MaterialType {
-  NOTE
-  VIDEO
-  YOUTUBE
 }
 
 model User {
@@ -23,10 +12,14 @@ model User {
   name          String?
   email         String    @unique
   password      String
-  role          Role      @default(STUDENT)
+  role          String    @default("STUDENT")
   image         String?
   degree        String?
   subjects      String?
+  bio           String?
+  showBio       Boolean   @default(true)
+  showDegree    Boolean   @default(true)
+  showSubjects  Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -52,7 +45,7 @@ model Material {
   id          String       @id @default(cuid())
   title       String
   description String?
-  type        MaterialType
+  type        String
   url         String
   classId     String
   class       Class        @relation(fields: [classId], references: [id])

@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react"
 import { BookOpen, User, Plus, Search, Loader2 } from "lucide-react"
 import { useSession } from "next-auth/react"
+import Link from "next/link"
 
 export default function ClassesPage() {
     const { data: session } = useSession()
     const [classes, setClasses] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
-    const isTeacher = session?.user?.role === "TEACHER"
+    const isTeacher = (session?.user as any)?.role === "TEACHER"
 
     useEffect(() => {
         fetch("/api/classes")
@@ -67,7 +68,7 @@ export default function ClassesPage() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {classes.map((cls) => (
-                        <div key={cls.id} className="glass rounded-3xl overflow-hidden hover:scale-[1.02] transition-all group border border-white/5">
+                        <Link key={cls.id} href={`/dashboard/classes/${cls.id}`} className="glass rounded-3xl overflow-hidden hover:scale-[1.02] transition-all group border border-white/5">
                             <div className="h-40 premium-gradient relative">
                                 <div className="absolute inset-0 bg-black/20" />
                                 <BookOpen className="absolute bottom-4 left-4 text-white/50 w-8 h-8" />
@@ -96,7 +97,7 @@ export default function ClassesPage() {
                                     )}
                                 </div>
                             </div>
-                        </div>
+                        </Link>
                     ))}
                 </div>
             )}
