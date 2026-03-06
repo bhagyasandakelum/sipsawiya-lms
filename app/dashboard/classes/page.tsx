@@ -45,13 +45,21 @@ export default function ClassesPage() {
                     </p>
                 </div>
 
-                <div className="relative group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-blue-400 transition-colors" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Search classes..."
-                        className="pl-11 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-blue-500 transition-all w-full md:w-64"
-                    />
+                <div className="flex gap-4 items-center">
+                    <div className="relative group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-blue-400 transition-colors" size={18} />
+                        <input
+                            type="text"
+                            placeholder="Search classes..."
+                            className="pl-11 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 outline-none focus:border-blue-500 transition-all w-full md:w-64"
+                        />
+                    </div>
+                    {isTeacher && (
+                        <Link href="/dashboard/classes/new" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-all flex items-center gap-2 whitespace-nowrap">
+                            <Plus size={18} />
+                            Create Class
+                        </Link>
+                    )}
                 </div>
             </div>
 

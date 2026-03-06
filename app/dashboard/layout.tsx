@@ -53,14 +53,14 @@ export default function DashboardLayout({
         }
     }
 
-    const currentSession = session || (status === "loading" ? null : mockSession);
+    const currentSession: any = session || (status === "loading" ? null : mockSession);
 
     if (status === "loading" && !session) {
         return (
-             <div className="min-h-screen flex items-center justify-center">
-                 <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-             </div>
-         )
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+        )
     }
 
     if (!currentSession) return null

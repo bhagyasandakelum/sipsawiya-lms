@@ -1,12 +1,21 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
-
-const MOCK_TEACHER_ID = "teacher-id-123"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 
 export async function POST(req: Request) {
     try {
-        // Bypass session check for dev
-        const userId = MOCK_TEACHER_ID
+        const session: any = await getServerSession(authOptions as any)
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+
+        const userId = session.user.id
+        const userRole = session.user.role
+
+        if (userRole !== "TEACHER" && userRole !== "ADMIN") {
+            return NextResponse.json({ error: "Only teachers can create classes" }, { status: 403 })
+        }
 
         const { name, description } = await req.json()
 
@@ -31,8 +40,17 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
     try {
-        // Return all classes for browsing
+        const session: any = await getServerSession(authOptions as any)
+        const userRole = session?.user?.role
+        const userId = session?.user?.id
+
+        let whereClause = {}
+        if (userRole === "TEACHER" && userId) {
+            whereClause = { teacherId: userId }
+        }
+
         const classes = await prisma.class.findMany({
+            where: whereClause,
             include: {
                 teacher: {
                     select: { name: true }

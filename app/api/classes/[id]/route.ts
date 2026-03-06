@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma"
 
 export async function GET(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params
@@ -16,6 +16,13 @@ export async function GET(
                 },
                 materials: {
                     orderBy: { createdAt: "desc" }
+                },
+                enrollments: {
+                    include: {
+                        student: {
+                            select: { name: true, email: true, image: true }
+                        }
+                    }
                 }
             }
         })

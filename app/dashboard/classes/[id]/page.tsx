@@ -14,14 +14,20 @@ import {
     MoreVertical,
     Download,
     ExternalLink,
-    Trash2
+    Trash2,
+    Users,
+    GraduationCap,
+    CheckCircle2
 } from "lucide-react"
 import Link from "next/link"
+import { useSession } from "next-auth/react"
 
 export default function ClassDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params)
+    const { data: session } = useSession()
     const [classData, setClassData] = useState<any>(null)
     const [loading, setLoading] = useState(true)
+    const [activeTab, setActiveTab] = useState("MATERIALS")
     const [showAddMaterial, setShowAddMaterial] = useState(false)
     const [newMaterial, setNewMaterial] = useState({
         title: "",
@@ -30,6 +36,8 @@ export default function ClassDetailsPage({ params }: { params: Promise<{ id: str
         url: ""
     })
     const [adding, setAdding] = useState(false)
+
+    const isTeacher = (session?.user as any)?.role === "TEACHER" || (session?.user as any)?.role === "ADMIN"
 
     useEffect(() => {
         fetchClass()
@@ -99,7 +107,7 @@ export default function ClassDetailsPage({ params }: { params: Promise<{ id: str
             </Link>
 
             <div className="flex flex-col md:flex-row gap-8 items-start">
-                {/* Left Column: Class Info */}
+                {/* Left Column: Class Info & Tabs */}
                 <div className="flex-1 space-y-8 w-full">
                     <div className="glass p-8 rounded-[2rem] relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-8 opacity-10">
@@ -119,59 +127,150 @@ export default function ClassDetailsPage({ params }: { params: Promise<{ id: str
                                     <Video size={16} className="text-purple-400" />
                                     {classData.materials?.length || 0} Materials
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-2xl font-bold">Learning Materials</h2>
-                        <button
-                            onClick={() => setShowAddMaterial(true)}
-                            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-blue-600/20"
-                        >
-                            <Plus size={18} /> Add Material
-                        </button>
-                    </div>
-
-                    {classData.materials?.length === 0 ? (
-                        <div className="glass p-12 rounded-[2rem] text-center border-dashed">
-                            <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 text-muted-foreground">
-                                <FileText size={32} />
-                            </div>
-                            <h3 className="text-xl font-bold">No materials yet</h3>
-                            <p className="text-muted-foreground mt-2">Start by adding notes, videos, or lecture links.</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 gap-4">
-                            {classData.materials.map((item: any) => (
-                                <div key={item.id} className="glass p-6 rounded-2xl flex items-center gap-6 group hover:bg-white/[0.07] transition-all border border-white/5">
-                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${item.type === 'VIDEO' ? 'bg-purple-500/10 text-purple-400' :
-                                            item.type === 'YOUTUBE' ? 'bg-red-500/10 text-red-400' :
-                                                'bg-blue-500/10 text-blue-400'
-                                        }`}>
-                                        {item.type === 'VIDEO' ? <Video size={24} /> :
-                                            item.type === 'YOUTUBE' ? <Youtube size={24} /> :
-                                                <FileText size={24} />}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-bold text-lg truncate">{item.title}</h4>
-                                        <p className="text-muted-foreground text-sm truncate">{item.description || 'No description'}</p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <a
-                                            href={item.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="p-3 hover:bg-white/10 rounded-xl transition-all text-muted-foreground hover:text-white"
-                                        >
-                                            <ExternalLink size={20} />
-                                        </a>
-                                        <button className="p-3 hover:bg-red-500/10 rounded-xl transition-all text-muted-foreground hover:text-red-400">
-                                            <Trash2 size={20} />
-                                        </button>
-                                    </div>
+                                <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/5 flex items-center gap-2 text-sm">
+                                    <Users size={16} className="text-green-400" />
+                                    {classData.enrollments?.length || 0} Participants
                                 </div>
-                            ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Tabs Navigation */}
+                    <div className="flex items-center gap-2 p-2 glass rounded-2xl w-fit">
+                        {[
+                            { id: "MATERIALS", label: "Materials", icon: FileText },
+                            { id: "PARTICIPANTS", label: "Participants", icon: Users },
+                            { id: "GRADES", label: "Grades", icon: GraduationCap },
+                        ].map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === tab.id
+                                        ? "bg-white/10 text-white"
+                                        : "text-muted-foreground hover:bg-white/5"
+                                    }`}
+                            >
+                                <tab.icon size={18} />
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Content Based on Active Tab */}
+                    {activeTab === "MATERIALS" && (
+                        <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-2xl font-bold">Learning Materials</h2>
+                                {isTeacher && (
+                                    <button
+                                        onClick={() => setShowAddMaterial(true)}
+                                        className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-blue-600/20"
+                                    >
+                                        <Plus size={18} /> Add Material
+                                    </button>
+                                )}
+                            </div>
+
+                            {classData.materials?.length === 0 ? (
+                                <div className="glass p-12 rounded-[2rem] text-center border-dashed">
+                                    <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 text-muted-foreground">
+                                        <FileText size={32} />
+                                    </div>
+                                    <h3 className="text-xl font-bold">No materials yet</h3>
+                                    <p className="text-muted-foreground mt-2">Start by adding notes, videos, or lecture links.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-4">
+                                    {classData.materials?.map((item: any) => (
+                                        <div key={item.id} className="glass p-6 rounded-2xl flex items-center gap-6 group hover:bg-white/[0.07] transition-all border border-white/5">
+                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${item.type === 'VIDEO' ? 'bg-purple-500/10 text-purple-400' :
+                                                item.type === 'YOUTUBE' ? 'bg-red-500/10 text-red-400' :
+                                                    'bg-blue-500/10 text-blue-400'
+                                                }`}>
+                                                {item.type === 'VIDEO' ? <Video size={24} /> :
+                                                    item.type === 'YOUTUBE' ? <Youtube size={24} /> :
+                                                        <FileText size={24} />}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-bold text-lg truncate">{item.title}</h4>
+                                                <p className="text-muted-foreground text-sm truncate">{item.description || 'No description'}</p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <a
+                                                    href={item.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="p-3 hover:bg-white/10 rounded-xl transition-all text-muted-foreground hover:text-white"
+                                                >
+                                                    <ExternalLink size={20} />
+                                                </a>
+                                                {isTeacher && (
+                                                    <button className="p-3 hover:bg-red-500/10 rounded-xl transition-all text-muted-foreground hover:text-red-400">
+                                                        <Trash2 size={20} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === "PARTICIPANTS" && (
+                        <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-2xl font-bold">Class Participants</h2>
+                            </div>
+
+                            {classData.enrollments?.length === 0 ? (
+                                <div className="glass p-12 rounded-[2rem] text-center border-dashed">
+                                    <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 text-muted-foreground">
+                                        <Users size={32} />
+                                    </div>
+                                    <h3 className="text-xl font-bold">No participants yet</h3>
+                                    <p className="text-muted-foreground mt-2">Wait for students to enroll in your class.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {classData.enrollments?.map((enrollment: any) => (
+                                        <div key={enrollment.id} className="glass p-4 rounded-2xl flex items-center gap-4 border border-white/5">
+                                            <div className="w-12 h-12 rounded-full bg-white/10 flex flex-shrink-0 items-center justify-center font-bold text-lg">
+                                                {enrollment.student?.name?.[0]?.toUpperCase() || 'U'}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-bold truncate">{enrollment.student?.name || 'Student'}</h4>
+                                                <p className="text-xs text-muted-foreground truncate">{enrollment.student?.email}</p>
+                                            </div>
+                                            {isTeacher && (
+                                                <button className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-all text-xs font-semibold">
+                                                    Remove
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === "GRADES" && (
+                        <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-2xl font-bold">Assignments & Grades</h2>
+                                {isTeacher && (
+                                    <button className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-blue-600/20">
+                                        <Plus size={18} /> New Assignment
+                                    </button>
+                                )}
+                            </div>
+                            <div className="glass p-12 rounded-[2rem] text-center border-dashed">
+                                <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 text-muted-foreground">
+                                    <GraduationCap size={32} />
+                                </div>
+                                <h3 className="text-xl font-bold">Grades Module Coming Soon</h3>
+                                <p className="text-muted-foreground mt-2">This feature is currently under development.</p>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -231,8 +330,8 @@ export default function ClassDetailsPage({ params }: { params: Promise<{ id: str
                                                 type="button"
                                                 onClick={() => setNewMaterial({ ...newMaterial, type: t.id })}
                                                 className={`flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all ${newMaterial.type === t.id
-                                                        ? 'bg-blue-600/20 border-blue-500 text-blue-400'
-                                                        : 'bg-white/5 border-white/5 hover:border-white/20'
+                                                    ? 'bg-blue-600/20 border-blue-500 text-blue-400'
+                                                    : 'bg-white/5 border-white/5 hover:border-white/20'
                                                     }`}
                                             >
                                                 <t.icon size={20} />
