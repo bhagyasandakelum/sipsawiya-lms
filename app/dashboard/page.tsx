@@ -1,22 +1,81 @@
 "use client"
 
 import { useSession } from "next-auth/react"
-import { BookOpen, Users, Video, Clock, ArrowUpRight, Bell } from "lucide-react"
+import { BookOpen, Users, Video, Clock, ArrowUpRight, Bell, PlusCircle as PlusIcon } from "lucide-react"
 import Link from "next/link"
+import { useState, useEffect } from "react"
 
 export default function DashboardPage() {
     const { data: session } = useSession()
     const isTeacher = (session?.user as any)?.role === "TEACHER"
 
-    const stats = isTeacher ? [
-        { label: "Active Classes", value: "0", icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
-        { label: "Total Students", value: "0", icon: Users, color: "text-purple-400", bg: "bg-purple-400/10" },
-        { label: "Materials", value: "0", icon: Video, color: "text-emerald-400", bg: "bg-emerald-400/10" },
-    ] : [
-        { label: "Enrolled Classes", value: "0", icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
-        { label: "Hours Learned", value: "0", icon: Clock, color: "text-purple-400", bg: "bg-purple-400/10" },
-        { label: "Materials", value: "0", icon: Video, color: "text-emerald-400", bg: "bg-emerald-400/10" },
-    ]
+    const [classes, setClasses] = useState<any[]>([])
+    const [stats, setStats] = useState<any[]>([])
+    const [recentActivity, setRecentActivity] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                const res = await fetch("/api/classes")
+                const data = await res.json()
+                if (res.ok) {
+                    setClasses(data)
+                    
+                    if (isTeacher) {
+                        const totalStudents = data.reduce((acc: number, cls: any) => acc + (cls.enrollments?.length || 0), 0)
+                        const totalMaterials = data.reduce((acc: number, cls: any) => acc + (cls.materials?.length || 0), 0)
+                        
+                        setStats([
+                            { label: "Active Classes", value: data.length.toString(), icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
+                            { label: "Total Students", value: totalStudents.toString(), icon: Users, color: "text-purple-400", bg: "bg-purple-400/10" },
+                            { label: "Materials uploaded", value: totalMaterials.toString(), icon: Video, color: "text-emerald-400", bg: "bg-emerald-400/10" },
+                        ])
+
+                        // Extract latest materials as recent activity
+                        const activity: any[] = []
+                        data.forEach((cls: any) => {
+                            if (cls.materials) {
+                                cls.materials.forEach((mat: any) => {
+                                    activity.push({
+                                        id: mat.id,
+                                        title: `Uploaded '${mat.title}' in ${cls.name}`,
+                                        date: mat.createdAt
+                                    })
+                                })
+                            }
+                        })
+                        
+                        // Sort by newest
+                        activity.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                        setRecentActivity(activity.slice(0, 5))
+                        
+                    } else {
+                        setStats([
+                            { label: "Enrolled Classes", value: data.length.toString(), icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
+                            { label: "Hours Learned", value: "0", icon: Clock, color: "text-purple-400", bg: "bg-purple-400/10" },
+                            { label: "Materials", value: data.reduce((acc: number, cls: any) => acc + (cls.materials?.length || 0), 0).toString(), icon: Video, color: "text-emerald-400", bg: "bg-emerald-400/10" },
+                        ])
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch dashboard summary")
+            } finally {
+                setLoading(false)
+            }
+        }
+        
+        if (session) {
+            fetchDashboardData()
+        }
+    }, [session, isTeacher])
+
+    if (loading) {
+        return <div className="animate-pulse space-y-8">
+            <div className="h-8 bg-white/10 rounded w-1/3"></div>
+            <div className="flex gap-6"><div className="h-32 bg-white/10 rounded flex-1"></div><div className="h-32 bg-white/10 rounded flex-1"></div><div className="h-32 bg-white/10 rounded flex-1"></div></div>
+        </div>
+    }
 
     return (
         <div className="space-y-8">
@@ -26,8 +85,8 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {stats.map((stat) => (
-                    <div key={stat.label} className="glass p-6 rounded-3xl relative overflow-hidden group">
+                {stats.map((stat, idx) => (
+                    <div key={idx} className="glass p-6 rounded-3xl relative overflow-hidden group">
                         <div className={`w-12 h-12 ${stat.bg} ${stat.color} rounded-2xl flex items-center justify-center mb-4`}>
                             <stat.icon size={24} />
                         </div>
@@ -41,12 +100,26 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="glass p-8 rounded-3xl">
+                <div className="glass p-8 rounded-3xl flex flex-col h-full">
                     <h2 className="text-xl font-bold mb-6">Recent Activity</h2>
-                    <div className="space-y-6">
-                        <div className="flex items-center gap-4 text-muted-foreground justify-center py-12 border-2 border-dashed border-white/5 rounded-2xl">
-                            <p>No recent activity found.</p>
-                        </div>
+                    <div className="space-y-4 flex-1">
+                        {isTeacher && recentActivity.length > 0 ? (
+                            recentActivity.map((act) => (
+                                <div key={act.id} className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+                                    <div className="w-10 h-10 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <Clock size={18} />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-sm">{act.title}</p>
+                                        <p className="text-xs text-muted-foreground">{new Date(act.date).toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="flex flex-col items-center gap-4 text-muted-foreground justify-center h-full py-12 border-2 border-dashed border-white/5 rounded-2xl">
+                                <p>No recent activity found.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -55,9 +128,9 @@ export default function DashboardPage() {
                     <div className="grid grid-cols-2 gap-4">
                         {isTeacher ? (
                             <>
-                                <Link href="/dashboard/classes" className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-blue-500 transition-all text-left group">
+                                <Link href="/dashboard/classes/new" className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-blue-500 transition-all text-left group">
                                     <div className="p-2 w-fit bg-blue-500/10 rounded-lg mb-4 text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all">
-                                        <PlusCircle size={20} />
+                                        <PlusIcon size={20} />
                                     </div>
                                     <p className="font-bold text-sm">Create Class</p>
                                 </Link>
@@ -102,11 +175,5 @@ export default function DashboardPage() {
                 </div>
             </div>
         </div>
-    )
-}
-
-function PlusCircle({ size }: { size: number }) {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v8" /><path d="M8 12h8" /></svg>
     )
 }

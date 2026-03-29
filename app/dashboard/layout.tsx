@@ -77,7 +77,7 @@ export default function DashboardLayout({
     return (
         <div className="min-h-screen bg-background text-foreground flex">
             {/* Sidebar */}
-            <aside className={`fixed md:relative z-40 h-full glass border-r border-white/5 transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'}`}>
+            <aside className={`fixed md:relative z-40 h-full glass border-r border-white/5 transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'} overflow-y-auto overflow-x-hidden scrollbar-hide`}>
                 <div className="flex flex-col h-full p-4">
                     <div className="flex items-center justify-between mb-10 px-2 mt-2">
                         {isSidebarOpen ? (
@@ -92,18 +92,24 @@ export default function DashboardLayout({
 
                     <nav className="flex-1 space-y-2">
                         {menuItems.map((item) => (
-                            <Link
-                                key={item.label}
-                                href={item.href}
-                                className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-white/5 transition-all text-muted-foreground hover:text-white"
-                            >
-                                <item.icon className="w-5 h-5 flex-shrink-0" />
-                                {isSidebarOpen && <span className="font-medium">{item.label}</span>}
-                            </Link>
+                            <div key={item.label}>
+                                <Link
+                                    href={item.href}
+                                    className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-white/5 transition-all text-muted-foreground hover:text-white group"
+                                >
+                                    <item.icon className="w-5 h-5 flex-shrink-0 group-hover:text-blue-400 transition-colors" />
+                                    {isSidebarOpen && <span className="font-medium">{item.label}</span>}
+                                </Link>
+                                
+                                {/* If this is the "My Classes" / "My Enrollments" item and sidebar is open, render fetched classes */}
+                                {isSidebarOpen && (item.href === "/dashboard/classes") && (
+                                    <SidebarClassesList isTeacher={isTeacher} />
+                                )}
+                            </div>
                         ))}
 
                         {isTeacher && isSidebarOpen && (
-                            <div className="pt-4 pb-2 px-4 uppercase text-[10px] font-bold text-muted-foreground tracking-widest">
+                            <div className="pt-8 pb-2 px-4 uppercase text-[10px] font-bold text-muted-foreground tracking-widest border-t border-white/5 mt-4">
                                 Teacher Actions
                             </div>
                         )}
@@ -154,6 +160,51 @@ export default function DashboardLayout({
                     {children}
                 </div>
             </main>
+        </div>
+    )
+}
+
+function SidebarClassesList({ isTeacher }: { isTeacher: boolean }) {
+    const [classes, setClasses] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchClasses = async () => {
+            try {
+                // To display all the enrolled / created classes 
+                const res = await fetch("/api/classes")
+                const data = await res.json()
+                if (res.ok) {
+                    setClasses(data)
+                }
+            } catch (err) {
+                console.error("Failed to fetch classes for sidebar")
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchClasses()
+    }, [])
+
+    if (loading) {
+        return <div className="pl-12 py-2 text-xs text-muted-foreground animate-pulse">Loading classes...</div>
+    }
+
+    if (classes.length === 0) {
+        return <div className="pl-12 py-2 text-xs text-muted-foreground italic">No classes found.</div>
+    }
+
+    return (
+        <div className="flex flex-col gap-1 mt-1 mb-3">
+            {classes.map((cls) => (
+                <Link
+                    key={cls.id}
+                    href={`/dashboard/classes/${cls.id}`}
+                    className="pl-12 pr-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all truncate border-l-2 border-transparent hover:border-blue-500 ml-2"
+                >
+                    {cls.name}
+                </Link>
+            ))}
         </div>
     )
 }
