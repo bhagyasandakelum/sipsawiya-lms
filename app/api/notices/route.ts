@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
-
-const MOCK_TEACHER_ID = "teacher-id-123"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 
 export async function POST(req: Request) {
     try {
-        const userId = MOCK_TEACHER_ID
+        const session: any = await getServerSession(authOptions as any)
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+        const userId = session.user.id
+        const userRole = session.user.role
+
+        if (userRole !== "TEACHER" && userRole !== "ADMIN") {
+            return NextResponse.json({ error: "Only teachers can post notices" }, { status: 403 })
+        }
+
         const { content } = await req.json()
 
         if (!content) {

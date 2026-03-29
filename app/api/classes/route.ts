@@ -54,7 +54,9 @@ export async function GET(req: Request) {
             include: {
                 teacher: {
                     select: { name: true }
-                }
+                },
+                materials: true,
+                enrollments: true
             }
         })
 

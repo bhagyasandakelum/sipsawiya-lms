@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
-
-const MOCK_TEACHER_ID = "teacher-id-123"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 
 export async function POST(req: Request) {
     try {
-        const userId = MOCK_TEACHER_ID
+        const session: any = await getServerSession(authOptions as any)
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+        const userId = session.user.id
 
         const { title, description, type, url, classId } = await req.json()
 
@@ -13,13 +17,20 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Missing fields" }, { status: 400 })
         }
 
-        // Check if the teacher owns the class
-        const classExists = await prisma.class.findFirst({
-            where: {
-                id: classId,
-                teacherId: userId
-            }
-        })
+        // Admin might be able to bypass this, but for now just check teacher ownership or if Admin
+        const userRole = session.user.role;
+        let classExists;
+
+        if (userRole === "ADMIN") {
+            classExists = await prisma.class.findUnique({ where: { id: classId } });
+        } else {
+            classExists = await prisma.class.findFirst({
+                where: {
+                    id: classId,
+                    teacherId: userId
+                }
+            })
+        }
 
         if (!classExists) {
             return NextResponse.json({ error: "Class not found or not owned by you" }, { status: 403 })
@@ -56,6 +67,43 @@ export async function GET(req: Request) {
         })
         return NextResponse.json(materials)
     } catch (error) {
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+    }
+}
+
+export async function DELETE(req: Request) {
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get("id")
+
+    if (!id) {
+        return NextResponse.json({ error: "id is required" }, { status: 400 })
+    }
+
+    try {
+        const session: any = await getServerSession(authOptions as any)
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+        
+        const material = await prisma.material.findUnique({
+            where: { id },
+            include: { class: true }
+        })
+
+        if (!material) {
+            return NextResponse.json({ error: "Material not found" }, { status: 404 })
+        }
+
+        if (session.user.role !== "ADMIN" && material.class.teacherId !== session.user.id) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+        }
+
+        await prisma.material.delete({
+            where: { id }
+        })
+        return NextResponse.json({ success: true })
+    } catch (error) {
+        console.error("Material delete error:", error)
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
     }
 }
