@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { GraduationCap, BookOpen, MapPin, Star, Search } from 'lucide-react'
+import { GraduationCap, BookOpen, MapPin, Search } from 'lucide-react'
 
 // Mock data to test if the UI works without DB
 const mockTeachers = [
@@ -9,7 +9,7 @@ const mockTeachers = [
         degree: 'Ph.D. in Physics',
         subjects: 'Physics, Mathematics',
         image: null,
-        taughtClasses: [{ id: 'c1' }, { id: 'c2' }]
+        taughtClasses: [{ id: 'c1', name: 'Advanced Physics A/L' }, { id: 'c2', name: 'Combined Maths O/L' }]
     },
     {
         id: '2',
@@ -17,7 +17,7 @@ const mockTeachers = [
         degree: 'M.Sc. in Biology',
         subjects: 'Biology, Chemistry',
         image: null,
-        taughtClasses: [{ id: 'c3' }]
+        taughtClasses: [{ id: 'c3', name: 'Human Biology' }]
     }
 ]
 
@@ -25,7 +25,6 @@ export default async function TeachersPage() {
     // We'll try to fetch but fallback to mock for now
     let teachers = []
     try {
-        // Dynamically import prisma to avoid top-level crash if client is missing
         const { default: prisma } = await import('@/lib/prisma')
         teachers = await prisma.user.findMany({
             where: { role: 'TEACHER' as any },
@@ -39,8 +38,8 @@ export default async function TeachersPage() {
     return (
         <div className="min-h-screen relative overflow-hidden bg-[#0a0a0a] text-white">
             {/* Background Glow */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full" />
+            <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-blue-600/10 blur-[140px] rounded-full pointer-events-none" />
+            <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-purple-600/10 blur-[140px] rounded-full pointer-events-none" />
 
             {/* Navigation */}
             <nav className="relative z-10 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
@@ -49,7 +48,7 @@ export default async function TeachersPage() {
                     <span className="text-2xl font-bold tracking-tight">Sipsawiya</span>
                 </Link>
                 <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-                    <Link href="/courses" className="hover:text-white transition-colors">Courses</Link>
+                    <Link href="/classes" className="hover:text-white transition-colors">Classes</Link>
                     <Link href="/teachers" className="text-white transition-colors">Teachers</Link>
                     <Link href="#" className="hover:text-white transition-colors">Pricing</Link>
                     <Link href="#" className="hover:text-white transition-colors">About</Link>
@@ -63,23 +62,30 @@ export default async function TeachersPage() {
             </nav>
 
             <main className="relative z-10 max-w-7xl mx-auto px-8 pt-12 pb-32">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-                    <div>
-                        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tighter mb-4">
-                            Our Expert <span className="text-gradient">Educators</span>
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16 border-b border-white/5 pb-10">
+                    <div className="max-w-2xl">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-blue-300 mb-6">
+                            <span className="flex h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
+                            Elite Faculty
+                        </div>
+                        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6 leading-tight">
+                            Meet Our <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+                                Expert Educators
+                            </span>
                         </h1>
-                        <p className="text-muted-foreground max-w-xl text-lg">
+                        <p className="text-muted-foreground text-lg leading-relaxed">
                             Learn from the best minds in the industry. Our teachers are dedicated to your success and academic excellence.
                             {teachers === mockTeachers && " (Offline Mode - Showing Mock Data)"}
                         </p>
                     </div>
 
-                    <div className="relative w-full md:w-80">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <div className="relative w-full md:w-80 shadow-[0_0_30px_rgba(59,130,246,0.1)] rounded-xl">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                         <input
                             type="text"
-                            placeholder="Search teachers or subjects..."
-                            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                            placeholder="Search teachers..."
+                            className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white/10 transition-all placeholder:text-muted-foreground/60 glass"
                         />
                     </div>
                 </div>
@@ -89,39 +95,67 @@ export default async function TeachersPage() {
                         <Link
                             key={teacher.id}
                             href={`/teachers/${teacher.id}`}
-                            className="group glass rounded-3xl p-6 hover:bg-white/5 transition-all hover:scale-[1.02] border border-white/5"
+                            className="group relative rounded-3xl p-[1px] overflow-hidden hover:scale-[1.02] transition-all duration-300"
                         >
-                            <div className="flex items-start gap-4 mb-6">
-                                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center border border-white/10">
-                                    {teacher.image ? (
-                                        <img src={teacher.image} alt={teacher.name || 'Teacher'} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <GraduationCap className="w-8 h-8 text-blue-400" />
-                                    )}
-                                </div>
+                            {/* Animated gradient border on hover */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 group-hover:from-blue-500/50 group-hover:to-purple-500/50 transition-colors duration-500" />
+                            
+                            <div className="relative h-full bg-[#0d0d0d] rounded-3xl p-6 md:p-8 flex flex-col justify-between">
                                 <div>
-                                    <h3 className="text-xl font-bold group-hover:text-blue-400 transition-colors">{teacher.name}</h3>
-                                    <p className="text-blue-400 text-sm font-medium">{teacher.degree || 'Expert Educator'}</p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="flex flex-wrap gap-2">
-                                    {(teacher.subjects?.split(',') || []).map((subject: string, idx: number) => (
-                                        <span key={idx} className="px-3 py-1 bg-white/5 rounded-full text-xs font-medium border border-white/5">
-                                            {subject.trim()}
-                                        </span>
-                                    ))}
-                                </div>
-
-                                <div className="pt-4 border-t border-white/5 flex items-center justify-between text-sm">
-                                    <div className="flex items-center gap-2 text-muted-foreground">
-                                        <BookOpen className="w-4 h-4" />
-                                        <span>{teacher.taughtClasses?.length || 0} Classes</span>
+                                    <div className="flex items-center gap-5 mb-8">
+                                        <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center border-2 border-white/10 group-hover:border-blue-400/50 transition-colors shrink-0">
+                                            {teacher.image ? (
+                                                <img src={teacher.image} alt={teacher.name || 'Teacher'} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <GraduationCap className="w-10 h-10 text-blue-400" />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <h3 className="text-2xl font-bold group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-purple-400 transition-all duration-300 mb-1">
+                                                {teacher.name}
+                                            </h3>
+                                            <p className="text-blue-400 text-sm font-semibold tracking-wide uppercase">{teacher.degree || 'Expert Educator'}</p>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-2 text-muted-foreground">
-                                        <MapPin className="w-4 h-4" />
-                                        <span>Online</span>
+
+                                    <div className="space-y-6">
+                                        <div>
+                                            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 font-semibold">Subjects Expert In</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {(teacher.subjects?.split(',') || []).map((subject: string, idx: number) => (
+                                                    <span key={idx} className="px-3 py-1.5 bg-white/5 rounded-lg text-xs font-medium border border-white/10 text-gray-300">
+                                                        {subject.trim()}
+                                                    </span>
+                                                ))}
+                                                {!teacher.subjects && (
+                                                    <span className="text-sm text-gray-500 italic">Not specified</span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 font-semibold delay-100">Teaching Classes</p>
+                                            <div className="flex flex-col gap-2">
+                                                {teacher.taughtClasses && teacher.taughtClasses.length > 0 ? (
+                                                    teacher.taughtClasses.map((aclass: any, idx: number) => (
+                                                        <div key={idx} className="flex items-center gap-2 text-sm text-gray-300 bg-white/5 px-3 py-2 rounded-lg border border-white/5">
+                                                            <BookOpen className="w-4 h-4 text-purple-400/70" />
+                                                            <span className="truncate">{aclass.name}</span>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-sm text-gray-500 italic">No active classes</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="pt-6 mt-6 border-t border-white/5 flex items-center justify-between text-sm">
+                                    <div className="text-blue-400 font-medium group-hover:underline">View Profile &rarr;</div>
+                                    <div className="flex items-center gap-1.5 text-muted-foreground bg-white/5 px-3 py-1 rounded-full">
+                                        <MapPin className="w-3.5 h-3.5" />
+                                        <span className="text-xs font-semibold">Online</span>
                                     </div>
                                 </div>
                             </div>
