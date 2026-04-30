@@ -58,8 +58,8 @@ export default function DashboardLayout({
 
     if (status === "loading" && !session) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-white/80 backdrop-blur-sm">
-                <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+            <div className="min-h-screen flex items-center justify-center bg-background/80 backdrop-blur-sm">
+                <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
             </div>
         )
     }
@@ -78,16 +78,16 @@ export default function DashboardLayout({
     return (
         <div className="min-h-screen bg-background text-foreground flex">
             {/* Sidebar */}
-            <aside className={`fixed md:relative z-40 h-full glass border-r border-blue-100 transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'} overflow-y-auto overflow-x-hidden scrollbar-hide`}>
+            <aside className={`fixed md:relative z-40 h-full glass border-r border-white/5 transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'} overflow-y-auto overflow-x-hidden scrollbar-hide`}>
                 <div className="flex flex-col h-full p-4">
                     <div className="flex items-center justify-between mb-10 px-2 mt-2">
                         {isSidebarOpen ? (
                             <Link href="/" className="flex items-center gap-2">
-                                <GraduationCap className="w-8 h-8 text-blue-600" />
-                                <span className="text-xl font-bold tracking-tight text-blue-950">Sipsawiya</span>
+                                <GraduationCap className="w-8 h-8 text-blue-400" />
+                                <span className="text-xl font-bold tracking-tight text-white">Sipsawiya</span>
                             </Link>
                         ) : (
-                            <GraduationCap className="w-8 h-8 text-blue-600 mx-auto" />
+                            <GraduationCap className="w-8 h-8 text-blue-400 mx-auto" />
                         )}
                     </div>
 
@@ -96,9 +96,9 @@ export default function DashboardLayout({
                             <div key={item.label}>
                                 <Link
                                     href={item.href}
-                                    className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-blue-50 transition-all text-slate-500 hover:text-blue-600 group"
+                                    className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-white/5 transition-all text-muted-foreground hover:text-white group"
                                 >
-                                    <item.icon className="w-5 h-5 flex-shrink-0 group-hover:text-blue-600 transition-colors" />
+                                    <item.icon className="w-5 h-5 flex-shrink-0 group-hover:text-blue-400 transition-colors" />
                                     {isSidebarOpen && <span className="font-medium">{item.label}</span>}
                                 </Link>
                                 
@@ -110,7 +110,7 @@ export default function DashboardLayout({
                         ))}
 
                         {isTeacher && isSidebarOpen && (
-                            <div className="pt-8 pb-2 px-4 uppercase text-[10px] font-bold text-slate-400 tracking-widest border-t border-blue-100 mt-4">
+                            <div className="pt-8 pb-2 px-4 uppercase text-[10px] font-bold text-muted-foreground tracking-widest border-t border-white/5 mt-4">
                                 Teacher Actions
                             </div>
                         )}
@@ -128,7 +128,7 @@ export default function DashboardLayout({
 
                     <button
                         onClick={() => signOut()}
-                        className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-red-50 text-slate-500 hover:text-red-600 transition-all mt-auto"
+                        className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-all mt-auto"
                     >
                         <LogOut className="w-5 h-5 flex-shrink-0" />
                         {isSidebarOpen && <span className="font-medium">Logout</span>}
@@ -138,10 +138,10 @@ export default function DashboardLayout({
 
             {/* Main Content */}
             <main className="flex-1 overflow-auto">
-                <header className="h-16 border-b border-blue-100 flex items-center justify-between px-8 bg-white/50 backdrop-blur-sm sticky top-0 z-30">
+                <header className="h-16 border-b border-white/5 flex items-center justify-between px-8 bg-background/50 backdrop-blur-sm sticky top-0 z-30">
                     <button
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                        className="p-2 hover:bg-blue-50 text-slate-600 rounded-lg transition-all"
+                        className="p-2 hover:bg-white/5 text-muted-foreground rounded-lg transition-all"
                     >
                         {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                     </button>
@@ -189,7 +189,7 @@ function SidebarClassesList({ isTeacher }: { isTeacher: boolean }) {
 
     if (loading) {
         return (
-            <div className="pl-12 py-2 text-xs text-blue-600 flex items-center gap-2">
+            <div className="pl-12 py-2 text-xs text-muted-foreground flex items-center gap-2">
                 <Loader2 className="h-3 w-3 animate-spin" />
                 Loading classes...
             </div>
@@ -197,7 +197,7 @@ function SidebarClassesList({ isTeacher }: { isTeacher: boolean }) {
     }
 
     if (classes.length === 0) {
-        return <div className="pl-12 py-2 text-xs text-slate-400 italic">No classes found.</div>
+        return <div className="pl-12 py-2 text-xs text-muted-foreground italic">No classes found.</div>
     }
 
     return (
@@ -206,7 +206,7 @@ function SidebarClassesList({ isTeacher }: { isTeacher: boolean }) {
                 <Link
                     key={cls.id}
                     href={`/dashboard/classes/${cls.id}`}
-                    className="pl-12 pr-4 py-2 text-sm text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all truncate border-l-2 border-transparent hover:border-blue-500 ml-2"
+                    className="pl-12 pr-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all truncate border-l-2 border-transparent hover:border-blue-500 ml-2"
                 >
                     {cls.name}
                 </Link>
