@@ -40,7 +40,8 @@ export default function DashboardPage() {
                                     activity.push({
                                         id: mat.id,
                                         title: `Uploaded '${mat.title}' in ${cls.name}`,
-                                        date: mat.createdAt
+                                        date: mat.createdAt,
+                                        type: "material"
                                     })
                                 })
                             }
@@ -51,11 +52,50 @@ export default function DashboardPage() {
                         setRecentActivity(activity.slice(0, 5))
                         
                     } else {
+                        const enrolledClasses = data.filter((cls: any) => 
+                            cls.enrollments?.some((e: any) => e.studentId === (session?.user as any)?.id)
+                        )
+
                         setStats([
-                            { label: "Enrolled Classes", value: data.length.toString(), icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
-                            { label: "Hours Learned", value: "0", icon: Clock, color: "text-purple-400", bg: "bg-purple-400/10" },
-                            { label: "Materials", value: data.reduce((acc: number, cls: any) => acc + (cls.materials?.length || 0), 0).toString(), icon: Video, color: "text-emerald-400", bg: "bg-emerald-400/10" },
+                            { label: "Enrolled Classes", value: enrolledClasses.length.toString(), icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
+                            { label: "Available Courses", value: data.length.toString(), icon: Users, color: "text-purple-400", bg: "bg-purple-400/10" },
+                            { label: "Total Materials", value: enrolledClasses.reduce((acc: number, cls: any) => acc + (cls.materials?.length || 0), 0).toString(), icon: Video, color: "text-emerald-400", bg: "bg-emerald-400/10" },
                         ])
+
+                        // Extract latest materials as recent activity for students
+                        const activity: any[] = []
+                        enrolledClasses.forEach((cls: any) => {
+                            if (cls.materials) {
+                                cls.materials.forEach((mat: any) => {
+                                    activity.push({
+                                        id: mat.id,
+                                        title: `New Material '${mat.title}' in ${cls.name}`,
+                                        date: mat.createdAt,
+                                        type: "material"
+                                    })
+                                })
+                            }
+                        })
+                        
+                        // Fetch notices
+                        try {
+                            const noticesRes = await fetch("/api/notices")
+                            const noticesData = await noticesRes.json()
+                            if (noticesRes.ok) {
+                                noticesData.forEach((notice: any) => {
+                                    activity.push({
+                                        id: notice.id,
+                                        title: `Notice from ${notice.teacher?.name}: ${notice.content.length > 50 ? notice.content.substring(0, 50) + "..." : notice.content}`,
+                                        date: notice.createdAt,
+                                        type: "notice"
+                                    })
+                                })
+                            }
+                        } catch(e) {}
+
+                        // Sort by newest
+                        activity.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                        setRecentActivity(activity.slice(0, 5))
                     }
                 }
             } catch (err) {
@@ -103,11 +143,13 @@ export default function DashboardPage() {
                 <div className="glass p-8 rounded-3xl flex flex-col h-full">
                     <h2 className="text-xl font-bold mb-6">Recent Activity</h2>
                     <div className="space-y-4 flex-1">
-                        {isTeacher && recentActivity.length > 0 ? (
+                        {recentActivity.length > 0 ? (
                             recentActivity.map((act) => (
                                 <div key={act.id} className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
-                                    <div className="w-10 h-10 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <Clock size={18} />
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                                        act.type === "notice" ? "bg-purple-500/10 text-purple-400" : "bg-blue-500/10 text-blue-400"
+                                    }`}>
+                                        {act.type === "notice" ? <Bell size={18} /> : <Clock size={18} />}
                                     </div>
                                     <div>
                                         <p className="font-medium text-sm">{act.title}</p>
@@ -167,7 +209,7 @@ export default function DashboardPage() {
                                     <div className="p-2 w-fit bg-purple-500/10 rounded-lg mb-4 text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-all">
                                         <BookOpen size={20} />
                                     </div>
-                                    <p className="font-bold text-sm">My Classes</p>
+                                    <p className="font-bold text-sm">Browse Courses</p>
                                 </Link>
                             </>
                         )}

@@ -116,15 +116,21 @@ export default function ClassesPage() {
                                         </div>
 
                                         {!isTeacher && (
-                                            <button
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleEnroll(cls.id);
-                                                }}
-                                                className="px-4 py-2 bg-blue-600 rounded-xl text-white text-xs font-bold hover:bg-blue-500 transition-all flex items-center gap-2"
-                                            >
-                                                <Plus size={14} /> Enroll
-                                            </button>
+                                            cls.enrollments?.some((e: any) => e.studentId === (session?.user as any)?.id) ? (
+                                                <span className="px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-xl text-xs font-bold flex items-center gap-2 border border-emerald-500/20">
+                                                    Enrolled
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        handleEnroll(cls.id);
+                                                    }}
+                                                    className="px-4 py-2 bg-blue-600 rounded-xl text-white text-xs font-bold hover:bg-blue-500 transition-all flex items-center gap-2"
+                                                >
+                                                    <Plus size={14} /> Enroll
+                                                </button>
+                                            )
                                         )}
                                     </div>
                                 </div>
