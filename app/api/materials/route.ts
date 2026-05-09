@@ -11,7 +11,7 @@ export async function POST(req: Request) {
         }
         const userId = session.user.id
 
-        const { title, description, type, url, classId } = await req.json()
+        const { title, description, section, type, url, classId } = await req.json()
 
         if (!title || !type || !url || !classId) {
             return NextResponse.json({ error: "Missing fields" }, { status: 400 })
@@ -40,6 +40,7 @@ export async function POST(req: Request) {
             data: {
                 title,
                 description,
+                section,
                 type,
                 url,
                 classId

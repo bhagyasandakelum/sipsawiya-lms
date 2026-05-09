@@ -36,7 +36,8 @@ export default function ClassDetailsPage({ params }: { params: Promise<{ id: str
 
     const [newMaterial, setNewMaterial] = useState({
         title: "",
-        section: "General", // Using description field as section in DB
+        section: "General",
+        description: "",
         type: "NOTE",
         url: ""
     })
@@ -72,7 +73,8 @@ export default function ClassDetailsPage({ params }: { params: Promise<{ id: str
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
                     title: newMaterial.title,
-                    description: newMaterial.section, // Save section name in description
+                    description: newMaterial.description,
+                    section: newMaterial.section,
                     type: newMaterial.type,
                     url: newMaterial.url,
                     classId: id 
@@ -81,7 +83,7 @@ export default function ClassDetailsPage({ params }: { params: Promise<{ id: str
 
             if (res.ok) {
                 setShowAddMaterial(false)
-                setNewMaterial({ title: "", section: "General", type: "NOTE", url: "" })
+                setNewMaterial({ title: "", section: "General", description: "", type: "NOTE", url: "" })
                 fetchClass()
             }
         } catch (err) {
@@ -168,7 +170,9 @@ export default function ClassDetailsPage({ params }: { params: Promise<{ id: str
 
     // Group materials by section
     const groupedMaterials = regularMaterials.reduce((acc: any, material: any) => {
-        const section = material.description || 'General';
+        // Fallback for older materials that used description as section
+        const isLegacySection = !material.section && material.description && material.description.length < 50;
+        const section = material.section || (isLegacySection ? material.description : 'General');
         if (!acc[section]) acc[section] = [];
         acc[section].push(material);
         return acc;
@@ -321,6 +325,9 @@ export default function ClassDetailsPage({ params }: { params: Promise<{ id: str
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <h4 className="font-bold text-lg leading-tight mb-1 text-white truncate group-hover:text-blue-400 transition-colors">{item.title}</h4>
+                                                            {item.description && item.description !== item.section && (
+                                                                <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{item.description}</p>
+                                                            )}
                                                             <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                                                 <span className="uppercase tracking-wider font-semibold">{item.type}</span>
                                                                 <span>&bull;</span>
@@ -513,6 +520,16 @@ export default function ClassDetailsPage({ params }: { params: Promise<{ id: str
                                     placeholder="e.g. Lecture Notes PDF"
                                     value={newMaterial.title}
                                     onChange={(e) => setNewMaterial({ ...newMaterial, title: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-white ml-1">Description (Optional)</label>
+                                <textarea
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 outline-none transition-all text-white placeholder:text-white/30 shadow-sm min-h-[100px]"
+                                    placeholder="Brief description of this resource..."
+                                    value={newMaterial.description}
+                                    onChange={(e) => setNewMaterial({ ...newMaterial, description: e.target.value })}
                                 />
                             </div>
 

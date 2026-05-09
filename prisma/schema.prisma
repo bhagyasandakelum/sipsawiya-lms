@@ -45,6 +45,7 @@ model Material {
   id          String       @id @default(cuid())
   title       String
   description String?
+  section     String?      @default("General")
   type        String
   url         String
   classId     String
