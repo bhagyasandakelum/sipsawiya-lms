@@ -97,9 +97,14 @@ export default function ClassesPage() {
                     {classes.map((cls) => (
                         <motion.div key={cls.id} variants={itemVariants}>
                             <Link href={`/dashboard/classes/${cls.id}`} className="block glass rounded-3xl overflow-hidden hover:scale-[1.02] hover:shadow-lg transition-all duration-300 group border border-white/5">
-                                <div className="h-40 premium-gradient relative">
-                                    <div className="absolute inset-0 bg-black/20" />
+                                <div className="h-40 premium-gradient relative" style={cls.thumbnail ? { backgroundImage: `url(${cls.thumbnail})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}>
+                                    <div className="absolute inset-0 bg-black/40" />
                                     <BookOpen className="absolute bottom-4 left-4 text-white/50 w-8 h-8" />
+                                    {cls.year && (
+                                        <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/10">
+                                            {cls.year}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="p-6">
                                     <h3 className="text-xl font-bold mb-2 text-white group-hover:text-blue-400 transition-colors">{cls.name}</h3>

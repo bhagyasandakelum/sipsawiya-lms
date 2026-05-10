@@ -32,6 +32,7 @@ model Class {
   id          String       @id @default(cuid())
   name        String
   description String?
+  year        String?
   thumbnail   String?
   teacherId   String
   teacher     User         @relation("TeacherClasses", fields: [teacherId], references: [id])

@@ -222,15 +222,16 @@ export default function ClassDetailsPage({ params }: { params: Promise<{ id: str
                         </div>
                     )}
 
-                    <div className="glass p-8 rounded-[2rem] relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-8 opacity-10 text-white">
+                    <div className="glass p-8 rounded-[2rem] relative overflow-hidden" style={classData.thumbnail ? { backgroundImage: `url(${classData.thumbnail})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}>
+                        <div className="absolute inset-0 bg-black/60 z-0"></div>
+                        <div className="absolute top-0 right-0 p-8 opacity-10 text-white z-0">
                             <BookOpen size={120} />
                         </div>
                         <div className="relative z-10">
                             <div className="flex justify-between items-start">
                                 <div>
                                     <h1 className="text-4xl font-bold mb-4 text-white">{classData.name}</h1>
-                                    <p className="text-muted-foreground text-lg max-w-2xl leading-relaxed">
+                                    <p className="text-muted-foreground text-lg max-w-2xl leading-relaxed text-gray-200">
                                         {classData.description || "No description provided for this class."}
                                     </p>
                                 </div>
@@ -246,7 +247,13 @@ export default function ClassDetailsPage({ params }: { params: Promise<{ id: str
                             </div>
                             
                             <div className="flex flex-wrap gap-4 mt-8">
-                                <div className="px-4 py-2 bg-white/5 rounded-xl border border-white/5 flex items-center gap-2 text-sm text-white">
+                                {classData.year && (
+                                    <div className="px-4 py-2 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 flex items-center gap-2 text-sm text-white font-medium">
+                                        <GraduationCap size={16} className="text-yellow-400" />
+                                        {classData.year}
+                                    </div>
+                                )}
+                                <div className="px-4 py-2 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 flex items-center gap-2 text-sm text-white">
                                     <Clock size={16} className="text-blue-400" />
                                     Created {new Date(classData.createdAt).toLocaleDateString()}
                                 </div>

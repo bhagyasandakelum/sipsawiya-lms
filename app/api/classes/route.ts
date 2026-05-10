@@ -17,7 +17,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Only teachers can create classes" }, { status: 403 })
         }
 
-        const { name, description } = await req.json()
+        const { name, description, year, thumbnail } = await req.json()
 
         if (!name) {
             return NextResponse.json({ error: "Class name is required" }, { status: 400 })
@@ -27,6 +27,8 @@ export async function POST(req: Request) {
             data: {
                 name,
                 description,
+                year,
+                thumbnail,
                 teacherId: userId
             }
         })

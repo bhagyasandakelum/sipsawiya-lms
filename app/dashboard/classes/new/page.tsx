@@ -6,7 +6,7 @@ import { BookOpen, ArrowLeft, Loader2, Sparkles } from "lucide-react"
 import Link from "next/link"
 
 export default function NewClassPage() {
-    const [formData, setFormData] = useState({ name: "", description: "" })
+    const [formData, setFormData] = useState({ name: "", description: "", year: "", thumbnail: "" })
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
     const router = useRouter()
@@ -64,10 +64,35 @@ export default function NewClassPage() {
                         type="text"
                         required
                         className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 outline-none transition-all placeholder:text-muted-foreground/30"
-                        placeholder="e.g. Advanced Physics - 2026 Batch"
+                        placeholder="e.g. Advanced Physics"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium ml-1">Academic Year / Batch</label>
+                        <input
+                            type="text"
+                            required
+                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 outline-none transition-all placeholder:text-muted-foreground/30"
+                            placeholder="e.g. 2026 Batch"
+                            value={formData.year}
+                            onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium ml-1">Background Image URL (Optional)</label>
+                        <input
+                            type="url"
+                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 outline-none transition-all placeholder:text-muted-foreground/30"
+                            placeholder="https://example.com/image.jpg"
+                            value={formData.thumbnail}
+                            onChange={(e) => setFormData({ ...formData, thumbnail: e.target.value })}
+                        />
+                    </div>
                 </div>
 
                 <div className="space-y-2">
@@ -88,7 +113,7 @@ export default function NewClassPage() {
                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                         <>
                             <Sparkles className="w-5 h-5" />
-                            Initialize Classroom
+                            Create Class
                         </>
                     )}
                 </button>
