@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
-
-const MOCK_STUDENT_ID = "student-id-123"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/lib/auth"
 
 export async function POST(req: Request) {
     try {
-        const userId = MOCK_STUDENT_ID
+        const session: any = await getServerSession(authOptions)
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+        
+        const userId = session.user.id
         const { classId } = await req.json()
 
         if (!classId) {

@@ -71,7 +71,6 @@ export default function DashboardLayout({
     const menuItems = [
         { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
         { icon: BookOpen, label: isTeacher ? "My Classes" : "My Enrollments", href: "/dashboard/classes" },
-        { icon: Video, label: "Materials", href: "/dashboard/materials" },
         { icon: User, label: "Profile", href: "/dashboard/profile" },
     ]
 
