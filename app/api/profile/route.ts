@@ -1,31 +1,23 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import bcrypt from "bcryptjs"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/lib/auth"
 
 export async function GET(req: Request) {
     try {
-        // In a real app, we'd get the ID from the session
-        // For now, we use the mock teacher ID
-        const userId = "teacher-id-123"
+        const session: any = await getServerSession(authOptions)
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+        const userId = session.user.id
 
-        let user = await prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
             where: { id: userId }
         })
 
         if (!user) {
-            // Create the mock user if it doesn't exist
-            user = await prisma.user.create({
-                data: {
-                    id: userId,
-                    name: "Dev Teacher",
-                    email: "teacher@example.com",
-                    password: await bcrypt.hash("password123", 10),
-                    role: "TEACHER",
-                    degree: "B.Sc. in Computer Science",
-                    subjects: "Mathematics, Physics",
-                    bio: "Experienced teacher with a passion for education.",
-                }
-            })
+            return NextResponse.json({ error: "User not found" }, { status: 404 })
         }
 
         return NextResponse.json(user)
@@ -37,7 +29,11 @@ export async function GET(req: Request) {
 
 export async function PUT(req: Request) {
     try {
-        const userId = "teacher-id-123"
+        const session: any = await getServerSession(authOptions)
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+        const userId = session.user.id
         const data = await req.json()
 
         const updateData: any = {

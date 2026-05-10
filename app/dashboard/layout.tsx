@@ -26,37 +26,14 @@ export default function DashboardLayout({
     const router = useRouter()
     const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
-    // For now, bypass login as requested by user
-    /*
+    // Enforce login
     useEffect(() => {
         if (status === "unauthenticated") {
             router.push("/login")
         }
     }, [status, router])
-    */
 
-    // if (status === "loading") {
-    //     return (
-    //         <div className="min-h-screen flex items-center justify-center">
-    //             <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-    //         </div>
-    //     )
-    // }
-
-    // Mock session if real session is not available
-    const mockSession = {
-        user: {
-            id: "teacher-id-123",
-            name: "Dev Teacher",
-            email: "teacher@example.com",
-            role: "TEACHER",
-            image: null
-        }
-    }
-
-    const currentSession: any = session || (status === "loading" ? null : mockSession);
-
-    if (status === "loading" && !session) {
+    if (status === "loading" || !session) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background/80 backdrop-blur-sm">
                 <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
@@ -64,7 +41,7 @@ export default function DashboardLayout({
         )
     }
 
-    if (!currentSession) return null
+    const currentSession: any = session;
 
     const isTeacher = currentSession.user.role === "TEACHER"
 
