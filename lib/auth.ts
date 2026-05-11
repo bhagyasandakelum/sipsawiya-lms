@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 
 export const authOptions: NextAuthOptions = {
+    secret: process.env.NEXTAUTH_SECRET || "sipsawiya_secret_key_1234567890",
     providers: [
         CredentialsProvider({
             name: "Credentials",

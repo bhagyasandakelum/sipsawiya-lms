@@ -43,8 +43,8 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-4">
           <Link href="/login" className="px-4 py-2 text-sm font-medium text-white hover:text-blue-400 transition-colors">Login</Link>
-          <Link href="/dashboard" className="px-5 py-2.5 bg-blue-600 text-white rounded-full text-sm font-bold hover:bg-blue-500 transition-all shadow-md shadow-blue-600/20">
-            Open Dashboard
+          <Link href="/classes" className="px-5 py-2.5 bg-blue-600 text-white rounded-full text-sm font-bold hover:bg-blue-500 transition-all shadow-md shadow-blue-600/20">
+            Start Learning
           </Link>
         </div>
       </motion.nav>
@@ -77,7 +77,7 @@ export default function Home() {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="max-w-2xl text-lg md:text-xl text-muted-foreground mb-12 leading-relaxed"
         >
-          The ultimate platform for tuition centers. Empowering teachers to share knowledge and students to achieve excellence through a seamless learning experience.
+          An open platform for independent learning. Empowering teachers and students worldwide to connect, share knowledge, and achieve excellence without organizational boundaries.
         </motion.p>
 
         <motion.div 
@@ -86,11 +86,11 @@ export default function Home() {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="flex flex-col sm:flex-row gap-4"
         >
-          <Link href="/dashboard" className="group px-8 py-4 premium-gradient text-white rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-all shadow-[0_8px_20px_rgba(59,130,246,0.3)]">
-            Explore Dashboard <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+          <Link href="/register" className="group px-8 py-4 premium-gradient text-white rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-all shadow-[0_8px_20px_rgba(59,130,246,0.3)]">
+            Get Started <ArrowRight className="group-hover:translate-x-1 transition-transform" />
           </Link>
-          <Link href="/dashboard/profile" className="px-8 py-4 glass text-white rounded-xl font-bold hover:bg-white/10 transition-all shadow-sm">
-            Teacher Settings
+          <Link href="/classes" className="px-8 py-4 glass text-white rounded-xl font-bold hover:bg-white/10 transition-all shadow-sm">
+            Explore Classes
           </Link>
         </motion.div>
 

@@ -6,12 +6,22 @@ import { authOptions } from "@/lib/auth"
 export async function POST(req: Request) {
     try {
         const session: any = await getServerSession(authOptions as any)
-        if (!session?.user?.id) {
+        if (!session?.user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        const userId = session.user.id
-        const userRole = session.user.role
+        let userId = session.user.id
+        let userRole = session.user.role
+
+        // Fallback if session token doesn't have id/role
+        if (!userId) {
+            const dbUser = await prisma.user.findUnique({ where: { email: session.user.email } })
+            if (!dbUser) {
+                return NextResponse.json({ error: "User not found" }, { status: 404 })
+            }
+            userId = dbUser.id
+            userRole = dbUser.role
+        }
 
         if (userRole !== "TEACHER" && userRole !== "ADMIN") {
             return NextResponse.json({ error: "Only teachers can create classes" }, { status: 403 })
@@ -43,8 +53,17 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
     try {
         const session: any = await getServerSession(authOptions as any)
-        const userRole = session?.user?.role
-        const userId = session?.user?.id
+
+        let userRole = session?.user?.role
+        let userId = session?.user?.id
+
+        if (session?.user?.email && !userId) {
+            const dbUser = await prisma.user.findUnique({ where: { email: session.user.email } })
+            if (dbUser) {
+                userId = dbUser.id
+                userRole = dbUser.role
+            }
+        }
 
         let whereClause = {}
         if (userRole === "TEACHER" && userId) {
