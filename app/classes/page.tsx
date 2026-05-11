@@ -16,8 +16,9 @@ export default function ClassesPage() {
 
     useEffect(() => {
         const fetchClasses = async () => {
+            setLoading(true)
             try {
-                const res = await fetch("/api/classes")
+                const res = await fetch(`/api/classes?q=${searchQuery}`)
                 if (res.ok) {
                     const data = await res.json()
                     setClasses(data)
@@ -28,8 +29,13 @@ export default function ClassesPage() {
                 setLoading(false)
             }
         }
-        fetchClasses()
-    }, [])
+        
+        const timeoutId = setTimeout(() => {
+            fetchClasses()
+        }, 300)
+
+        return () => clearTimeout(timeoutId)
+    }, [searchQuery])
 
     const handleEnroll = async (classId: string) => {
         if (status === "unauthenticated" || !session) {
@@ -62,12 +68,7 @@ export default function ClassesPage() {
         }
     }
 
-    const filteredClasses = classes.filter((cls) => {
-        const query = searchQuery.toLowerCase()
-        const className = cls.name?.toLowerCase() || ""
-        const teacherName = cls.teacher?.name?.toLowerCase() || ""
-        return className.includes(query) || teacherName.includes(query)
-    })
+    const filteredClasses = classes
 
     return (
         <div className="min-h-screen relative overflow-hidden bg-background text-foreground selection:bg-blue-500/30">

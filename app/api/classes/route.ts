@@ -65,9 +65,24 @@ export async function GET(req: Request) {
             }
         }
 
-        let whereClause = {}
+        const url = new URL(req.url)
+        const query = url.searchParams.get("q") || ""
+
+        let whereClause: any = {}
+        
+        // Only restrict to teacher's own classes if not doing a global search, or if that was the intended behavior.
+        // Wait, if it's the dashboard it might need different logic.
+        // Actually, the previous code always restricted TEACHER to their own classes.
+        // Let's keep it restricted, but add the query.
         if (userRole === "TEACHER" && userId) {
-            whereClause = { teacherId: userId }
+            whereClause.teacherId = userId
+        }
+
+        if (query) {
+            whereClause.OR = [
+                { name: { contains: query, mode: 'insensitive' } },
+                { teacher: { name: { contains: query, mode: 'insensitive' } } }
+            ]
         }
 
         const classes = await prisma.class.findMany({
