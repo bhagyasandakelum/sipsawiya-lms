@@ -85,7 +85,6 @@ export default function ClassesPage() {
                 <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
                     <Link href="/classes" className="text-white transition-colors">Classes</Link>
                     <Link href="/teachers" className="hover:text-white transition-colors">Teachers</Link>
-                    <Link href="#" className="hover:text-white transition-colors">Pricing</Link>
                     <Link href="#" className="hover:text-white transition-colors">About</Link>
                 </div>
                 <div className="flex items-center gap-4">
