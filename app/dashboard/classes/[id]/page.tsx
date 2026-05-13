@@ -18,7 +18,10 @@ import {
     Users,
     GraduationCap,
     CheckCircle2,
-    Radio
+    Radio,
+    Monitor,
+    ClipboardList,
+    Link as LinkIcon
 } from "lucide-react"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
@@ -326,9 +329,19 @@ export default function ClassDetailsPage({ params }: { params: Promise<{ id: str
                                                 {materials.map((item: any) => (
                                                     <div key={item.id} className="glass p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center gap-5 group hover:bg-white/[0.07] hover:shadow-md transition-all border border-white/5 relative overflow-hidden">
                                                         <div className={`w-12 h-12 rounded-xl flex flex-shrink-0 items-center justify-center ${
-                                                            item.type === 'VIDEO' || item.type === 'YOUTUBE' ? 'bg-red-500/10 text-red-400' : 'bg-blue-500/10 text-blue-400'
+                                                            item.type === 'VIDEO' || item.type === 'YOUTUBE' ? 'bg-red-500/10 text-red-400' : 
+                                                            item.type === 'MEET' ? 'bg-purple-500/10 text-purple-400' :
+                                                            item.type === 'LINK' ? 'bg-emerald-500/10 text-emerald-400' :
+                                                            item.type === 'PRESENTATION' ? 'bg-orange-500/10 text-orange-400' :
+                                                            item.type === 'ASSIGNMENT' ? 'bg-pink-500/10 text-pink-400' :
+                                                            'bg-blue-500/10 text-blue-400'
                                                         }`}>
-                                                            {item.type === 'VIDEO' || item.type === 'YOUTUBE' ? <Youtube size={22} /> : <FileText size={22} />}
+                                                            {item.type === 'VIDEO' || item.type === 'YOUTUBE' ? <Youtube size={22} /> : 
+                                                             item.type === 'MEET' ? <Video size={22} /> :
+                                                             item.type === 'LINK' ? <LinkIcon size={22} /> :
+                                                             item.type === 'PRESENTATION' ? <Monitor size={22} /> :
+                                                             item.type === 'ASSIGNMENT' ? <ClipboardList size={22} /> :
+                                                             <FileText size={22} />}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <h4 className="font-bold text-lg leading-tight mb-1 text-white truncate group-hover:text-blue-400 transition-colors">{item.title}</h4>
@@ -371,7 +384,7 @@ export default function ClassDetailsPage({ params }: { params: Promise<{ id: str
                                     ))}
                                 </div>
                             )}
-                        </div>
+                        </motion.div>
                     )}
 
                     {activeTab === "PARTICIPANTS" && (
@@ -543,10 +556,14 @@ export default function ClassDetailsPage({ params }: { params: Promise<{ id: str
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2 col-span-2">
                                     <label className="text-sm font-medium text-white ml-1">Resource Type</label>
-                                    <div className="grid grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                         {[
                                             { id: 'NOTE', icon: FileText, label: 'Document / PDF' },
                                             { id: 'YOUTUBE', icon: Youtube, label: 'Recorded Video' },
+                                            { id: 'PRESENTATION', icon: Monitor, label: 'Presentation' },
+                                            { id: 'LINK', icon: LinkIcon, label: 'External Link' },
+                                            { id: 'ASSIGNMENT', icon: ClipboardList, label: 'Assignment' },
+                                            { id: 'MEET', icon: Video, label: 'Live Meeting' },
                                         ].map((t) => (
                                             <button
                                                 key={t.id}
