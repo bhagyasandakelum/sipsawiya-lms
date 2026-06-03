@@ -1,10 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { GraduationCap, ArrowRight, Loader2 } from "lucide-react"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function LoginPage() {
     const [email, setEmail] = useState("")
@@ -12,24 +12,27 @@ export default function LoginPage() {
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const { login } = useAuth()
+
+    const registered = searchParams.get("registered")
+    const verified = searchParams.get("verified")
+    const sessionExpired = searchParams.get("session")
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
         setError("")
 
-        const res = await signIn("credentials", {
-            email,
-            password,
-            redirect: false,
-        })
-
-        if (res?.error) {
-            setError("Invalid email or password")
-            setLoading(false)
-        } else {
+        try {
+            await login(email, password)
             router.push("/dashboard")
             router.refresh()
+        } catch (err: any) {
+            const message =
+                err.response?.data?.message || err.message || "Invalid email or password"
+            setError(message)
+            setLoading(false)
         }
     }
 
@@ -50,6 +53,23 @@ export default function LoginPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="glass p-8 rounded-3xl space-y-5">
+                    {/* Status messages */}
+                    {registered && (
+                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm rounded-xl text-center">
+                            Registration successful! Please check your email to verify your account.
+                        </div>
+                    )}
+                    {verified && (
+                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm rounded-xl text-center">
+                            Email verified successfully! You can now sign in.
+                        </div>
+                    )}
+                    {sessionExpired === "expired" && (
+                        <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-sm rounded-xl text-center">
+                            Your session has expired. Please sign in again.
+                        </div>
+                    )}
+
                     {error && (
                         <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl text-center">
                             {error}
@@ -59,6 +79,7 @@ export default function LoginPage() {
                     <div className="space-y-2">
                         <label className="text-sm font-medium ml-1">Email Address</label>
                         <input
+                            id="login-email"
                             type="email"
                             required
                             className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 outline-none transition-all"
@@ -69,8 +90,17 @@ export default function LoginPage() {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium ml-1">Password</label>
+                        <div className="flex items-center justify-between">
+                            <label className="text-sm font-medium ml-1">Password</label>
+                            <Link
+                                href="/forgot-password"
+                                className="text-xs text-blue-400 hover:underline"
+                            >
+                                Forgot password?
+                            </Link>
+                        </div>
                         <input
+                            id="login-password"
                             type="password"
                             required
                             className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 outline-none transition-all"
@@ -81,6 +111,7 @@ export default function LoginPage() {
                     </div>
 
                     <button
+                        id="login-submit"
                         type="submit"
                         disabled={loading}
                         className="w-full py-4 premium-gradient rounded-xl font-bold flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100"

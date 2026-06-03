@@ -1,15 +1,17 @@
 "use client"
 
-import { useSession } from "next-auth/react"
+import { useAuth } from "@/contexts/AuthContext"
 import { BookOpen, Users, Video, Clock, ArrowUpRight, Bell, PlusCircle as PlusIcon } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
+import api from "@/lib/api"
 
 export default function DashboardPage() {
-    const { data: session } = useSession()
-    const isTeacher = (session?.user as any)?.role === "TEACHER"
+    const { user } = useAuth()
+    const isTeacher = user?.role === "TEACHER"
+    const isAdmin = user?.role === "ADMIN"
+    const displayName = user?.profile?.name || user?.email?.split("@")[0] || "User"
 
-    const [classes, setClasses] = useState<any[]>([])
     const [stats, setStats] = useState<any[]>([])
     const [recentActivity, setRecentActivity] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
@@ -17,98 +19,87 @@ export default function DashboardPage() {
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                const res = await fetch("/api/classes")
-                const data = await res.json()
-                if (res.ok) {
-                    setClasses(data)
-                    
-                    if (isTeacher) {
-                        const totalStudents = data.reduce((acc: number, cls: any) => acc + (cls.enrollments?.length || 0), 0)
-                        const totalMaterials = data.reduce((acc: number, cls: any) => acc + (cls.materials?.length || 0), 0)
-                        
-                        setStats([
-                            { label: "Active Classes", value: data.length.toString(), icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
-                            { label: "Total Students", value: totalStudents.toString(), icon: Users, color: "text-purple-400", bg: "bg-purple-400/10" },
-                            { label: "Materials uploaded", value: totalMaterials.toString(), icon: Video, color: "text-emerald-400", bg: "bg-emerald-400/10" },
-                        ])
+                const res = await api.get("/classes")
+                const data = Array.isArray(res.data) ? res.data : res.data?.data || []
 
-                        // Extract latest materials as recent activity
-                        const activity: any[] = []
-                        data.forEach((cls: any) => {
-                            if (cls.materials) {
-                                cls.materials.forEach((mat: any) => {
-                                    activity.push({
-                                        id: mat.id,
-                                        title: `Uploaded '${mat.title}' in ${cls.name}`,
-                                        date: mat.createdAt,
-                                        type: "material"
-                                    })
+                if (isTeacher) {
+                    const totalStudents = data.reduce((acc: number, cls: any) => acc + (cls.enrollments?.length || 0), 0)
+                    const totalMaterials = data.reduce((acc: number, cls: any) => acc + (cls.materials?.length || 0), 0)
+
+                    setStats([
+                        { label: "Active Classes", value: data.length.toString(), icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
+                        { label: "Total Students", value: totalStudents.toString(), icon: Users, color: "text-purple-400", bg: "bg-purple-400/10" },
+                        { label: "Materials Uploaded", value: totalMaterials.toString(), icon: Video, color: "text-emerald-400", bg: "bg-emerald-400/10" },
+                    ])
+
+                    const activity: any[] = []
+                    data.forEach((cls: any) => {
+                        if (cls.materials) {
+                            cls.materials.forEach((mat: any) => {
+                                activity.push({
+                                    id: mat.id,
+                                    title: `Uploaded '${mat.title}' in ${cls.name}`,
+                                    date: mat.createdAt,
+                                    type: "material"
                                 })
-                            }
-                        })
-                        
-                        // Sort by newest
-                        activity.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                        setRecentActivity(activity.slice(0, 5))
-                        
-                    } else {
-                        const enrolledClasses = data.filter((cls: any) => 
-                            cls.enrollments?.some((e: any) => e.studentId === (session?.user as any)?.id)
-                        )
+                            })
+                        }
+                    })
 
-                        setStats([
-                            { label: "Enrolled Classes", value: enrolledClasses.length.toString(), icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
-                            { label: "Available Courses", value: data.length.toString(), icon: Users, color: "text-purple-400", bg: "bg-purple-400/10" },
-                            { label: "Total Materials", value: enrolledClasses.reduce((acc: number, cls: any) => acc + (cls.materials?.length || 0), 0).toString(), icon: Video, color: "text-emerald-400", bg: "bg-emerald-400/10" },
-                        ])
+                    activity.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                    setRecentActivity(activity.slice(0, 5))
+                } else if (isAdmin) {
+                    setStats([
+                        { label: "Total Classes", value: data.length.toString(), icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
+                        { label: "Platform Users", value: "—", icon: Users, color: "text-purple-400", bg: "bg-purple-400/10" },
+                        { label: "Total Materials", value: data.reduce((acc: number, cls: any) => acc + (cls.materials?.length || 0), 0).toString(), icon: Video, color: "text-emerald-400", bg: "bg-emerald-400/10" },
+                    ])
+                } else {
+                    // Student
+                    const enrolledClasses = data.filter((cls: any) =>
+                        cls.enrollments?.some((e: any) => e.studentId === user?.id)
+                    )
 
-                        // Extract latest materials as recent activity for students
-                        const activity: any[] = []
-                        enrolledClasses.forEach((cls: any) => {
-                            if (cls.materials) {
-                                cls.materials.forEach((mat: any) => {
-                                    activity.push({
-                                        id: mat.id,
-                                        title: `New Material '${mat.title}' in ${cls.name}`,
-                                        date: mat.createdAt,
-                                        type: "material"
-                                    })
+                    setStats([
+                        { label: "Enrolled Classes", value: enrolledClasses.length.toString(), icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
+                        { label: "Available Courses", value: data.length.toString(), icon: Users, color: "text-purple-400", bg: "bg-purple-400/10" },
+                        { label: "Total Materials", value: enrolledClasses.reduce((acc: number, cls: any) => acc + (cls.materials?.length || 0), 0).toString(), icon: Video, color: "text-emerald-400", bg: "bg-emerald-400/10" },
+                    ])
+
+                    const activity: any[] = []
+                    enrolledClasses.forEach((cls: any) => {
+                        if (cls.materials) {
+                            cls.materials.forEach((mat: any) => {
+                                activity.push({
+                                    id: mat.id,
+                                    title: `New Material '${mat.title}' in ${cls.name}`,
+                                    date: mat.createdAt,
+                                    type: "material"
                                 })
-                            }
-                        })
-                        
-                        // Fetch notices
-                        try {
-                            const noticesRes = await fetch("/api/notices")
-                            const noticesData = await noticesRes.json()
-                            if (noticesRes.ok) {
-                                noticesData.forEach((notice: any) => {
-                                    activity.push({
-                                        id: notice.id,
-                                        title: `Notice from ${notice.teacher?.name}: ${notice.content.length > 50 ? notice.content.substring(0, 50) + "..." : notice.content}`,
-                                        date: notice.createdAt,
-                                        type: "notice"
-                                    })
-                                })
-                            }
-                        } catch(e) {}
+                            })
+                        }
+                    })
 
-                        // Sort by newest
-                        activity.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                        setRecentActivity(activity.slice(0, 5))
-                    }
+                    activity.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                    setRecentActivity(activity.slice(0, 5))
                 }
             } catch (err) {
+                // Classes API may not be fully implemented yet
                 console.error("Failed to fetch dashboard summary")
+                setStats([
+                    { label: "Classes", value: "0", icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
+                    { label: "Users", value: "—", icon: Users, color: "text-purple-400", bg: "bg-purple-400/10" },
+                    { label: "Materials", value: "0", icon: Video, color: "text-emerald-400", bg: "bg-emerald-400/10" },
+                ])
             } finally {
                 setLoading(false)
             }
         }
-        
-        if (session) {
+
+        if (user) {
             fetchDashboardData()
         }
-    }, [session, isTeacher])
+    }, [user, isTeacher, isAdmin])
 
     if (loading) {
         return <div className="animate-pulse space-y-8">
@@ -120,7 +111,7 @@ export default function DashboardPage() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-3xl font-bold">Welcome back, {session?.user?.name}!</h1>
+                <h1 className="text-3xl font-bold">Welcome back, {displayName}!</h1>
                 <p className="text-muted-foreground mt-1">Here's what's happening with your classes today.</p>
             </div>
 
@@ -146,9 +137,8 @@ export default function DashboardPage() {
                         {recentActivity.length > 0 ? (
                             recentActivity.map((act) => (
                                 <div key={act.id} className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                                        act.type === "notice" ? "bg-purple-500/10 text-purple-400" : "bg-blue-500/10 text-blue-400"
-                                    }`}>
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${act.type === "notice" ? "bg-purple-500/10 text-purple-400" : "bg-blue-500/10 text-blue-400"
+                                        }`}>
                                         {act.type === "notice" ? <Bell size={18} /> : <Clock size={18} />}
                                     </div>
                                     <div>
@@ -176,26 +166,12 @@ export default function DashboardPage() {
                                     </div>
                                     <p className="font-bold text-sm">Create Class</p>
                                 </Link>
-                                <button
-                                    onClick={() => {
-                                        const content = prompt("Enter your notice content:")
-                                        if (content) {
-                                            fetch("/api/notices", {
-                                                method: "POST",
-                                                body: JSON.stringify({ content }),
-                                            }).then(res => {
-                                                if (res.ok) alert("Notice published!")
-                                                else alert("Failed to publish notice")
-                                            })
-                                        }
-                                    }}
-                                    className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500 transition-all text-left group"
-                                >
+                                <Link href="/dashboard/profile" className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-purple-500 transition-all text-left group">
                                     <div className="p-2 w-fit bg-purple-500/10 rounded-lg mb-4 text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-all">
                                         <Bell size={20} />
                                     </div>
-                                    <p className="font-bold text-sm">Publish Notice</p>
-                                </button>
+                                    <p className="font-bold text-sm">Edit Profile</p>
+                                </Link>
                             </>
                         ) : (
                             <>

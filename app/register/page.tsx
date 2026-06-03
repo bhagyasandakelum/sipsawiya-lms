@@ -4,42 +4,68 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { GraduationCap, ArrowRight, Loader2, User, BookOpen } from "lucide-react"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function RegisterPage() {
     const [formData, setFormData] = useState({
         name: "",
         email: "",
         password: "",
-        role: "STUDENT",
+        confirmPassword: "",
+        role: "STUDENT" as "STUDENT" | "TEACHER",
+        // Student fields
+        institution: "",
+        academicLevel: "",
+        // Teacher fields
+        qualification: "",
+        experience: "",
+        specialization: "",
+        bio: "",
     })
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
     const router = useRouter()
+    const { register } = useAuth()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
         setError("")
 
+        // Client-side validation
+        if (formData.password !== formData.confirmPassword) {
+            setError("Passwords do not match")
+            setLoading(false)
+            return
+        }
+
+        if (formData.password.length < 8) {
+            setError("Password must be at least 8 characters")
+            setLoading(false)
+            return
+        }
+
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/
+        if (!passwordRegex.test(formData.password)) {
+            setError("Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character")
+            setLoading(false)
+            return
+        }
+
         try {
-            const res = await fetch("/api/register", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
-            })
-
-            const data = await res.json()
-
-            if (res.ok) {
-                router.push("/login?registered=true")
-            } else {
-                setError(data.error || "Something went wrong")
-                setLoading(false)
-            }
-        } catch (err) {
-            setError("Failed to connect to server")
+            const { confirmPassword, ...registerData } = formData
+            await register(registerData)
+            router.push("/login?registered=true")
+        } catch (err: any) {
+            const message =
+                err.response?.data?.message || err.message || "Something went wrong"
+            setError(message)
             setLoading(false)
         }
+    }
+
+    const updateField = (field: string, value: string) => {
+        setFormData((prev) => ({ ...prev, [field]: value }))
     }
 
     return (
@@ -68,36 +94,55 @@ export default function RegisterPage() {
                     <div className="space-y-2">
                         <label className="text-sm font-medium ml-1">Full Name</label>
                         <input
+                            id="register-name"
                             type="text"
                             required
                             className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 outline-none transition-all"
                             placeholder="John Doe"
                             value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            onChange={(e) => updateField("name", e.target.value)}
                         />
                     </div>
 
                     <div className="space-y-2">
                         <label className="text-sm font-medium ml-1">Email Address</label>
                         <input
+                            id="register-email"
                             type="email"
                             required
                             className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 outline-none transition-all"
                             placeholder="name@example.com"
                             value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            onChange={(e) => updateField("email", e.target.value)}
                         />
                     </div>
 
                     <div className="space-y-2">
                         <label className="text-sm font-medium ml-1">Password</label>
                         <input
+                            id="register-password"
                             type="password"
                             required
                             className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 outline-none transition-all"
                             placeholder="••••••••"
                             value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            onChange={(e) => updateField("password", e.target.value)}
+                        />
+                        <p className="text-xs text-muted-foreground ml-1">
+                            Min 8 chars, with uppercase, lowercase, number & special character
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium ml-1">Confirm Password</label>
+                        <input
+                            id="register-confirm-password"
+                            type="password"
+                            required
+                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 outline-none transition-all"
+                            placeholder="••••••••"
+                            value={formData.confirmPassword}
+                            onChange={(e) => updateField("confirmPassword", e.target.value)}
                         />
                     </div>
 
@@ -106,7 +151,7 @@ export default function RegisterPage() {
                         <div className="grid grid-cols-2 gap-4">
                             <button
                                 type="button"
-                                onClick={() => setFormData({ ...formData, role: "STUDENT" })}
+                                onClick={() => updateField("role", "STUDENT")}
                                 className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.role === "STUDENT"
                                     ? "bg-blue-600/20 border-blue-500 text-blue-400"
                                     : "bg-white/5 border-white/10 hover:border-white/20"
@@ -116,7 +161,7 @@ export default function RegisterPage() {
                             </button>
                             <button
                                 type="button"
-                                onClick={() => setFormData({ ...formData, role: "TEACHER" })}
+                                onClick={() => updateField("role", "TEACHER")}
                                 className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition-all ${formData.role === "TEACHER"
                                     ? "bg-purple-600/20 border-purple-500 text-purple-400"
                                     : "bg-white/5 border-white/10 hover:border-white/20"
@@ -127,34 +172,86 @@ export default function RegisterPage() {
                         </div>
                     </div>
 
-                    {formData.role === "TEACHER" && (
+                    {/* Student-specific fields */}
+                    {formData.role === "STUDENT" && (
                         <>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium ml-1">Highest Degree</label>
+                                <label className="text-sm font-medium ml-1">Institution</label>
                                 <input
+                                    id="register-institution"
                                     type="text"
-                                    required
                                     className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 outline-none transition-all"
-                                    placeholder="e.g. B.Sc. in Physics"
-                                    value={(formData as any).degree || ""}
-                                    onChange={(e) => setFormData({ ...formData, ['degree' as any]: e.target.value })}
+                                    placeholder="e.g. University of Colombo"
+                                    value={formData.institution}
+                                    onChange={(e) => updateField("institution", e.target.value)}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium ml-1">Subjects (comma separated)</label>
+                                <label className="text-sm font-medium ml-1">Academic Level</label>
                                 <input
+                                    id="register-academic-level"
                                     type="text"
-                                    required
                                     className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 outline-none transition-all"
-                                    placeholder="e.g. Physics, Mathematics"
-                                    value={(formData as any).subjects || ""}
-                                    onChange={(e) => setFormData({ ...formData, ['subjects' as any]: e.target.value })}
+                                    placeholder="e.g. Undergraduate, A/L"
+                                    value={formData.academicLevel}
+                                    onChange={(e) => updateField("academicLevel", e.target.value)}
+                                />
+                            </div>
+                        </>
+                    )}
+
+                    {/* Teacher-specific fields */}
+                    {formData.role === "TEACHER" && (
+                        <>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium ml-1">Qualification</label>
+                                <input
+                                    id="register-qualification"
+                                    type="text"
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 outline-none transition-all"
+                                    placeholder="e.g. B.Sc. in Physics"
+                                    value={formData.qualification}
+                                    onChange={(e) => updateField("qualification", e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium ml-1">Experience</label>
+                                <input
+                                    id="register-experience"
+                                    type="text"
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 outline-none transition-all"
+                                    placeholder="e.g. 5 years"
+                                    value={formData.experience}
+                                    onChange={(e) => updateField("experience", e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium ml-1">Specialization</label>
+                                <input
+                                    id="register-specialization"
+                                    type="text"
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 outline-none transition-all"
+                                    placeholder="e.g. Combined Mathematics"
+                                    value={formData.specialization}
+                                    onChange={(e) => updateField("specialization", e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium ml-1">Bio</label>
+                                <textarea
+                                    id="register-bio"
+                                    rows={3}
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 outline-none transition-all resize-none"
+                                    placeholder="Tell students about yourself..."
+                                    value={formData.bio}
+                                    onChange={(e) => updateField("bio", e.target.value)}
                                 />
                             </div>
                         </>
                     )}
 
                     <button
+                        id="register-submit"
                         type="submit"
                         disabled={loading}
                         className="w-full py-4 premium-gradient rounded-xl font-bold flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100"

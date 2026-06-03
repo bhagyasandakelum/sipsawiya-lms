@@ -1,39 +1,39 @@
 "use client"
 
-import { useSession, signOut } from "next-auth/react"
+import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
     LayoutDashboard,
     BookOpen,
-    Video,
-    PlusCircle,
     User,
     LogOut,
     GraduationCap,
     Menu,
     X,
-    Loader2
+    Loader2,
+    PlusCircle
 } from "lucide-react"
 import { useState, useEffect } from "react"
+import api from "@/lib/api"
 
 export default function DashboardLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
-    const { data: session, status } = useSession()
+    const { user, isAuthenticated, isLoading, logout } = useAuth()
     const router = useRouter()
     const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
     // Enforce login
     useEffect(() => {
-        if (status === "unauthenticated") {
+        if (!isLoading && !isAuthenticated) {
             router.push("/login")
         }
-    }, [status, router])
+    }, [isLoading, isAuthenticated, router])
 
-    if (status === "loading" || !session) {
+    if (isLoading || !isAuthenticated || !user) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background/80 backdrop-blur-sm">
                 <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
@@ -41,15 +41,20 @@ export default function DashboardLayout({
         )
     }
 
-    const currentSession: any = session;
-
-    const isTeacher = currentSession.user.role === "TEACHER"
+    const isTeacher = user.role === "TEACHER"
+    const isAdmin = user.role === "ADMIN"
+    const displayName = user.profile?.name || user.email.split("@")[0]
 
     const menuItems = [
         { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
         { icon: BookOpen, label: isTeacher ? "My Classes" : "My Enrollments", href: "/dashboard/classes" },
         { icon: User, label: "Profile", href: "/dashboard/profile" },
     ]
+
+    const handleLogout = async () => {
+        await logout()
+        router.push("/login")
+    }
 
     return (
         <div className="min-h-screen bg-background text-foreground flex">
@@ -77,8 +82,8 @@ export default function DashboardLayout({
                                     <item.icon className="w-5 h-5 flex-shrink-0 group-hover:text-blue-400 transition-colors" />
                                     {isSidebarOpen && <span className="font-medium">{item.label}</span>}
                                 </Link>
-                                
-                                {/* If this is the "My Classes" / "My Enrollments" item and sidebar is open, render fetched classes */}
+
+                                {/* Sidebar classes list */}
                                 {isSidebarOpen && (item.href === "/dashboard/classes") && (
                                     <SidebarClassesList isTeacher={isTeacher} />
                                 )}
@@ -103,7 +108,7 @@ export default function DashboardLayout({
                     </nav>
 
                     <button
-                        onClick={() => signOut()}
+                        onClick={handleLogout}
                         className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-all mt-auto"
                     >
                         <LogOut className="w-5 h-5 flex-shrink-0" />
@@ -124,11 +129,11 @@ export default function DashboardLayout({
 
                     <div className="flex items-center gap-4">
                         <div className="text-right hidden sm:block">
-                            <p className="text-sm font-bold">{currentSession.user.name}</p>
-                            <p className="text-[11px] text-muted-foreground uppercase tracking-widest">{currentSession.user.role}</p>
+                            <p className="text-sm font-bold">{displayName}</p>
+                            <p className="text-[11px] text-muted-foreground uppercase tracking-widest">{user.role}</p>
                         </div>
                         <div className="w-10 h-10 rounded-full premium-gradient flex items-center justify-center font-bold">
-                            {currentSession.user.name?.[0]?.toUpperCase() || "U"}
+                            {displayName?.[0]?.toUpperCase() || "U"}
                         </div>
                     </div>
                 </header>
@@ -148,13 +153,13 @@ function SidebarClassesList({ isTeacher }: { isTeacher: boolean }) {
     useEffect(() => {
         const fetchClasses = async () => {
             try {
-                // To display all the enrolled / created classes 
-                const res = await fetch("/api/classes")
-                const data = await res.json()
-                if (res.ok) {
-                    setClasses(data)
+                // This will call the Express backend once class routes are added
+                const res = await api.get("/classes")
+                if (res.data) {
+                    setClasses(Array.isArray(res.data) ? res.data : res.data.data || [])
                 }
             } catch (err) {
+                // Classes API might not be implemented yet
                 console.error("Failed to fetch classes for sidebar")
             } finally {
                 setLoading(false)

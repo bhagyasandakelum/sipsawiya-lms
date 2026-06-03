@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@prisma/client": "^5.10.2",
+    "axios": "^1.17.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.34.2",
     "lucide-react": "^0.575.0",
@@ -24,13 +24,9 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "bcryptjs": "^3.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-    "next-auth": "^4.24.13",
-    "prisma": "^5.10.2",
     "tailwindcss": "^4",
-    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }
