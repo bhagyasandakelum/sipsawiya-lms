@@ -56,7 +56,7 @@ export default function LoginPage() {
                     {/* Status messages */}
                     {registered && (
                         <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm rounded-xl text-center">
-                            Registration successful! Please check your email to verify your account.
+                            Registration successful! You can now sign in.
                         </div>
                     )}
                     {verified && (

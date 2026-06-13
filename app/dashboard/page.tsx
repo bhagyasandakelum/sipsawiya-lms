@@ -19,73 +19,59 @@ export default function DashboardPage() {
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                const res = await api.get("/classes")
-                const data = Array.isArray(res.data) ? res.data : res.data?.data || []
-
                 if (isTeacher) {
-                    const totalStudents = data.reduce((acc: number, cls: any) => acc + (cls.enrollments?.length || 0), 0)
-                    const totalMaterials = data.reduce((acc: number, cls: any) => acc + (cls.materials?.length || 0), 0)
-
+                    const statsRes = await api.get("/teacher/dashboard/stats")
+                    const statsData = statsRes.data.data;
+                    
                     setStats([
-                        { label: "Active Classes", value: data.length.toString(), icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
-                        { label: "Total Students", value: totalStudents.toString(), icon: Users, color: "text-purple-400", bg: "bg-purple-400/10" },
-                        { label: "Materials Uploaded", value: totalMaterials.toString(), icon: Video, color: "text-emerald-400", bg: "bg-emerald-400/10" },
+                        { label: "Active Classes", value: statsData.stats.totalClasses.toString(), icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
+                        { label: "Total Students", value: statsData.stats.totalStudents.toString(), icon: Users, color: "text-purple-400", bg: "bg-purple-400/10" },
+                        { label: "Materials Uploaded", value: statsData.stats.totalMaterials.toString(), icon: Video, color: "text-emerald-400", bg: "bg-emerald-400/10" },
                     ])
-
-                    const activity: any[] = []
-                    data.forEach((cls: any) => {
-                        if (cls.materials) {
-                            cls.materials.forEach((mat: any) => {
-                                activity.push({
-                                    id: mat.id,
-                                    title: `Uploaded '${mat.title}' in ${cls.name}`,
-                                    date: mat.createdAt,
-                                    type: "material"
-                                })
-                            })
-                        }
-                    })
-
-                    activity.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                    setRecentActivity(activity.slice(0, 5))
-                } else if (isAdmin) {
-                    setStats([
-                        { label: "Total Classes", value: data.length.toString(), icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
-                        { label: "Platform Users", value: "—", icon: Users, color: "text-purple-400", bg: "bg-purple-400/10" },
-                        { label: "Total Materials", value: data.reduce((acc: number, cls: any) => acc + (cls.materials?.length || 0), 0).toString(), icon: Video, color: "text-emerald-400", bg: "bg-emerald-400/10" },
-                    ])
+                    setRecentActivity(statsData.recentActivity || [])
                 } else {
-                    // Student
-                    const enrolledClasses = data.filter((cls: any) =>
-                        cls.enrollments?.some((e: any) => e.studentId === user?.id)
-                    )
+                    const res = await api.get("/classes")
+                    const data = Array.isArray(res.data) ? res.data : (res.data?.data?.classes || res.data?.data || [])
 
-                    setStats([
-                        { label: "Enrolled Classes", value: enrolledClasses.length.toString(), icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
-                        { label: "Available Courses", value: data.length.toString(), icon: Users, color: "text-purple-400", bg: "bg-purple-400/10" },
-                        { label: "Total Materials", value: enrolledClasses.reduce((acc: number, cls: any) => acc + (cls.materials?.length || 0), 0).toString(), icon: Video, color: "text-emerald-400", bg: "bg-emerald-400/10" },
-                    ])
+                    if (isAdmin) {
+                        setStats([
+                            { label: "Total Classes", value: data.length.toString(), icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
+                            { label: "Platform Users", value: "—", icon: Users, color: "text-purple-400", bg: "bg-purple-400/10" },
+                            { label: "Total Materials", value: data.reduce((acc: number, cls: any) => acc + (cls.materials?.length || 0), 0).toString(), icon: Video, color: "text-emerald-400", bg: "bg-emerald-400/10" },
+                        ])
+                    } else {
+                        // Student
+                        const enrolledClasses = data.filter((cls: any) =>
+                            cls.enrollments?.some((e: any) => e.studentId === user?.id)
+                        )
 
-                    const activity: any[] = []
-                    enrolledClasses.forEach((cls: any) => {
-                        if (cls.materials) {
-                            cls.materials.forEach((mat: any) => {
-                                activity.push({
-                                    id: mat.id,
-                                    title: `New Material '${mat.title}' in ${cls.name}`,
-                                    date: mat.createdAt,
-                                    type: "material"
+                        setStats([
+                            { label: "Enrolled Classes", value: enrolledClasses.length.toString(), icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
+                            { label: "Available Courses", value: data.length.toString(), icon: Users, color: "text-purple-400", bg: "bg-purple-400/10" },
+                            { label: "Total Materials", value: enrolledClasses.reduce((acc: number, cls: any) => acc + (cls.materials?.length || 0), 0).toString(), icon: Video, color: "text-emerald-400", bg: "bg-emerald-400/10" },
+                        ])
+
+                        const activity: any[] = []
+                        enrolledClasses.forEach((cls: any) => {
+                            if (cls.materials) {
+                                cls.materials.forEach((mat: any) => {
+                                    activity.push({
+                                        id: mat.id,
+                                        title: `New Material '${mat.title}' in ${cls.name}`,
+                                        date: mat.createdAt,
+                                        type: "material"
+                                    })
                                 })
-                            })
-                        }
-                    })
+                            }
+                        })
 
-                    activity.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                    setRecentActivity(activity.slice(0, 5))
+                        activity.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                        setRecentActivity(activity.slice(0, 5))
+                    }
                 }
             } catch (err) {
                 // Classes API may not be fully implemented yet
-                console.error("Failed to fetch dashboard summary")
+                console.error("Failed to fetch dashboard summary", err)
                 setStats([
                     { label: "Classes", value: "0", icon: BookOpen, color: "text-blue-400", bg: "bg-blue-400/10" },
                     { label: "Users", value: "—", icon: Users, color: "text-purple-400", bg: "bg-purple-400/10" },

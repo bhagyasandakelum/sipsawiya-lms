@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { BookOpen, ArrowLeft, Loader2, Sparkles } from "lucide-react"
 import Link from "next/link"
+import api from "@/lib/api"
 
 export default function NewClassPage() {
     const [formData, setFormData] = useState({ name: "", description: "", year: "", thumbnail: "" })
@@ -17,21 +18,16 @@ export default function NewClassPage() {
         setError("")
 
         try {
-            const res = await fetch("/api/classes", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
-            })
+            const res = await api.post("/classes", formData)
 
-            if (res.ok) {
+            if (res.status === 200 || res.status === 201) {
                 router.push("/dashboard/classes")
             } else {
-                const data = await res.json()
-                setError(data.error || "Failed to create class")
+                setError(res.data.message || "Failed to create class")
                 setLoading(false)
             }
-        } catch (err) {
-            setError("Network error")
+        } catch (err: any) {
+            setError(err.response?.data?.message || "Network error")
             setLoading(false)
         }
     }

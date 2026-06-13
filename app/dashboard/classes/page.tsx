@@ -2,37 +2,44 @@
 
 import { useState, useEffect } from "react"
 import { BookOpen, User, Plus, Search, Loader2 } from "lucide-react"
-import { useSession } from "next-auth/react"
+import { useAuth } from "@/contexts/AuthContext"
+import api from "@/lib/api"
 import Link from "next/link"
 import { motion } from "framer-motion"
 
 export default function ClassesPage() {
-    const { data: session } = useSession()
+    const { user } = useAuth()
     const [classes, setClasses] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
-    const isTeacher = (session?.user as any)?.role === "TEACHER"
+    const isTeacher = user?.role === "TEACHER"
 
     useEffect(() => {
-        fetch("/api/classes")
-            .then(res => res.json())
-            .then(data => {
-                setClasses(data)
+        const fetchClasses = async () => {
+            try {
+                const url = isTeacher ? "/classes?mine=true" : "/classes"
+                const res = await api.get(url)
+                setClasses(res.data.data?.classes || res.data.data || [])
+            } catch (err) {
+                console.error("Failed to fetch classes", err)
+            } finally {
                 setLoading(false)
-            })
-    }, [])
+            }
+        }
+        fetchClasses()
+    }, [isTeacher])
 
     const handleEnroll = async (classId: string) => {
-        const res = await fetch("/api/enroll", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ classId }),
-        })
-
-        if (res.ok) {
-            alert("Enrolled successfully!")
-        } else {
-            const data = await res.json()
-            alert(data.error || "Failed to enroll")
+        try {
+            const res = await api.post("/enrollments", { classId })
+            if (res.data.success) {
+                alert("Enrolled successfully!")
+                // Refresh list
+                const url = isTeacher ? "/classes?mine=true" : "/classes"
+                const listRes = await api.get(url)
+                setClasses(listRes.data.data?.classes || listRes.data.data || [])
+            }
+        } catch (err: any) {
+            alert(err.response?.data?.message || "Failed to enroll")
         }
     }
 
@@ -121,7 +128,7 @@ export default function ClassesPage() {
                                         </div>
 
                                         {!isTeacher && (
-                                            cls.enrollments?.some((e: any) => e.studentId === (session?.user as any)?.id) ? (
+                                            cls.enrollments?.some((e: any) => e.studentId === user?.id) ? (
                                                 <span className="px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-xl text-xs font-bold flex items-center gap-2 border border-emerald-500/20">
                                                     Enrolled
                                                 </span>
